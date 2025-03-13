@@ -61,49 +61,7 @@ const prevPage = () => {
   }
 }
 
-// Fungsi untuk menghapus item
-const deleteItem = async () => {
-  if (!itemToDelete.value) {
-    console.error('No item selected for deletion')
-    return
-  }
 
-  try {
-    await api.request({
-      method: 'DELETE',
-      url: `/penjualan/${itemToDelete.value.id}`,
-      headers: {
-        Accept: 'application/json',
-        'Content-type': 'application/json'
-      }
-    })
-
-    fetchDataPenjualan()
-    showModal.value = false
-    Swal.fire({
-      title: 'Berhasil!',
-      text: 'Data penjualan berhasil dihapus.',
-      icon: 'success',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#1d4ed8'
-    })
-  } catch (error) {
-    if (error.response?.status === 400) {
-      modalMessage.value = 'Data tidak bisa dihapus karena memiliki relasi dengan data lain.'
-      isDeleteButtonVisible.value = false
-    } else {
-      alert('Terjadi kesalahan saat menghapus data.')
-    }
-    console.error('Error deleting item:', error)
-  }
-}
-
-const confirmDelete = (penjualan) => {
-  itemToDelete.value = penjualan
-  modalMessage.value = 'Apakah Anda yakin ingin menghapus Penjualan barang ini?'
-  isDeleteButtonVisible.value = true
-  showModal.value = true
-}
 const handleFileInput = (event) => {
   selectedFile.value = event.target.files[0]
 }
@@ -282,7 +240,7 @@ onMounted(() => {
           </thead>
           <tbody>
             <tr v-if="penjualanData.length === 0">
-              <td colspan="3" class="text-center py-5 px-4 text-gray-500">
+              <td colspan="6" class="text-center py-5 px-4 text-gray-500">
                 Data penjualan tidak ada
               </td>
             </tr>

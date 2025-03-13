@@ -45,12 +45,9 @@ const menuGroups = ref([
         label: 'Laporan',
         route: '#',
         children: [
-          { label: 'Laporan Daftar Barang ', route: '' },
-          { label: 'Laporan Daftar Member ', route: '' },
-          { label: 'Laporan Pembelian Barang', route: '' },
-          { label: 'Laporan Penjualan Barang', route: '' },
-          { label: 'Laporan Keuntungan Barang', route: '' },
-          { label: 'Laporan Keuntungan Barang', route: '' }
+          { label: 'Laporan Penjualan ', route: '/admin/dashboard/laporan-penjualan' },
+          { label: 'Laporan Pembelian ', route: '/admin/dashboard/laporan-pembelian' },
+          { label: 'Laporan Penjualan Barang', route: '/admin/dashboard/laporan-penjualan-barang' },
         ]
       },
       {

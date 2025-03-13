@@ -158,7 +158,7 @@ const menuGroups = ref([
         route: '#',
         children: [
           { label: 'Daftar Member', route: '/user/dashboard/member' },
-          { label: 'Registrasi Member', route: '/user/dashboard/member' },
+          { label: 'Registrasi Member', route: '/user/dashboard/member/create' },
         ]
       },
 

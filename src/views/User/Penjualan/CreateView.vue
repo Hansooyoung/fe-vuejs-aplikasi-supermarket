@@ -1,6 +1,6 @@
 <script setup>
 import api from '@/api'
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import DefaultCard from '@/components/Forms/DefaultCard.vue'
 import DefaultLayoutUser from '@/layouts/DefaultLayoutUser.vue'
@@ -13,7 +13,7 @@ const formData = ref({
   voucher_id: '',
   barang: [],
   tanggal_penjualan: '',
-  tunai: ''
+  tunai: 0 
 })
 
 const memberList = ref([])
@@ -37,6 +37,9 @@ const isSelected = (barang) => {
   return selectedBarang.value.some((b) => b.barcode === barang.barcode)
 }
 
+console.log(selectedBarang.value);
+
+
 const currentPage = ref(1)
 const totalPages = ref(1)
 
@@ -59,6 +62,7 @@ const fetchData = async (page = 1) => {
   }
 }
 
+
 const filteredBarang = computed(() => {
   return barangList.value.filter(
     (barang) =>
@@ -67,18 +71,20 @@ const filteredBarang = computed(() => {
   )
 })
 
-watch([filteredBarang, debouncedQuery], () => {
-  fetchData()
-  noBarangMessage.value =
-    debouncedQuery.value && filteredBarang.value.length === 0 ? 'Barang Tidak Ditemukan' : ''
+watchEffect(() => {
+  if (debouncedQuery.value !== '') {
+    fetchData()
+  }
 })
+
 
 const addBarang = (barang) => {
   if (!isSelected(barang)) {
     selectedBarang.value.push({
       barcode: barang.barcode,
       nama_barang: barang.nama_barang,
-      harga_jual: barang.harga_jual_diskon ?? barang.harga_jual,
+      harga_jual: barang.harga_jual_diskon && barang.harga_jual_diskon > 0 ? barang.harga_jual_diskon : barang.harga_jual,
+
       jumlah: 1
     })
   }
@@ -89,17 +95,31 @@ const removeBarang = (index) => {
 }
 
 const handleSubmit = async () => {
-  if (isSubmitting.value) return
-  isSubmitting.value = true
+  if (isSubmitting.value) return;
+
+  const confirmResult = await Swal.fire({
+    title: 'Konfirmasi',
+    text: 'Apakah Anda yakin ingin menyimpan transaksi ini?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Ya, simpan',
+    cancelButtonText: 'Batal'
+  });
+
+  if (!confirmResult.isConfirmed) return; // Jika dibatalkan, hentikan proses
+
+  isSubmitting.value = true;
 
   try {
-    errors.value = []
+    errors.value = [];
     formData.value.barang = selectedBarang.value.map(({ barcode, jumlah }) => ({
       barcode,
       jumlah
-    }))
+    }));
 
-    await api.request({
+    const response = await api.request({
       method: 'POST',
       url: '/penjualan',
       headers: { Accept: 'application/json', 'Content-type': 'application/json' },
@@ -110,36 +130,46 @@ const handleSubmit = async () => {
         tanggal_penjualan: formData.value.tanggal_penjualan,
         tunai: formData.value.tunai
       }
-    })
+    });
+
+    const transaksiId = response.data.penjualan.id; 
 
     Swal.fire({
       icon: 'success',
       title: 'Berhasil',
-      text: `Transaksi berhasil! Kembalian: Rp${kembalian.value.toLocaleString('id-ID')}`,
-      timer: 2000,
-      showConfirmButton: true
-    })
+      text: 'Transaksi berhasil!',
+      timer: 1500,
+      showConfirmButton: false
+    });
 
-    router.push({ name: 'penjualan' })
+    router.push({ 
+  name: 'struk', 
+  params: { id: transaksiId }, 
+  query: { tunai: formData.value.tunai, kembalian: kembalian.value } 
+});
+
   } catch (error) {
     const errorMessage =
       error.response?.data?.error ||
       Object.values(error.response?.data?.errors || {})
         .flat()
         .join(', ') ||
-      'Terjadi kesalahan saat menyimpan data.'
+      'Terjadi kesalahan saat menyimpan data.';
 
     Swal.fire({
       icon: 'error',
       title: 'Gagal',
       text: errorMessage
-    })
+    });
 
-    errors.value = error.response?.data?.errors || []
+    errors.value = error.response?.data?.errors || [];
   } finally {
-    isSubmitting.value = false // Reset state setelah request selesai
+    isSubmitting.value = false; 
   }
-}
+};
+
+
+
 
 const handleSearch = () => {
   clearTimeout(debounceTimeout)
@@ -153,7 +183,9 @@ const handleEnterSearch = () => {
   debouncedQuery.value = searchQuery.value
 }
 
-onMounted(fetchData)
+onMounted(() => {
+  fetchData() 
+})
 </script>
 
 <template>
@@ -314,10 +346,10 @@ onMounted(fetchData)
             </p>
 
             <!-- Kembalian -->
-            <p v-if="formData.tunai >= totalHarga" class="mt-2 text-green-600">
+            <p v-if="formData.tunai >= totalHarga" class="mt-4 mb-4 font-semibold">
               Kembalian: Rp{{ kembalian.toLocaleString('id-ID') }}
             </p>
-            <p v-else class="mt-2 text-red-600">
+            <p v-else class="mt-4 mb-4 font-semibold">
               Uang tunai kurang Rp{{ (totalHarga - formData.tunai).toLocaleString('id-ID') }}
             </p>
             <!-- Tombol Simpan Data -->

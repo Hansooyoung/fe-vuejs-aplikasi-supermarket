@@ -186,6 +186,27 @@ import api from '@/api'
     meta: { role: 'admin' }
   },
   {
+    path: '/admin/dashboard/laporan-penjualan',
+    name: 'laporan-penjualan',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/Laporan/PenjualanView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
+    path: '/admin/dashboard/laporan-pembelian',
+    name: 'laporan-pembelian',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/Laporan/PembelianView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
+    path: '/admin/dashboard/laporan-penjualan-barang',
+    name: 'laporan-penjualan-barang',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/Laporan/PenjualanBarangView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
     path: '/super/dashboard/vendor',
     name: 'vendor-super',
     component: () =>
@@ -213,6 +234,7 @@ import api from '@/api'
       import(/* webpackChunkName: "home" */ '../views/Admin/Vendor/UpdateView.vue'),
     meta: { role: 'admin' }
   },
+
   {
     path: '/super/dashboard/vendor/update/:id',
     name: 'vendor-super.update',
@@ -246,6 +268,13 @@ import api from '@/api'
     name: 'penjualan',
     component: () =>
       import(/* webpackChunkName: "home" */ '../views/User/Penjualan/IndexView.vue'),
+    meta: { role: 'user' }
+  },
+  {
+    path: '/user/dashboard/penjualan/struk/:id',
+    name: 'struk',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/User/Penjualan/StrukView.vue'),
     meta: { role: 'user' }
   },
   {
@@ -298,13 +327,33 @@ import api from '@/api'
     meta: { role: 'user' }
   },
   {
+    path: '/user/dashboard/barang/detail/:kode_barang',
+    name: 'barang.detail',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/User/Barang/DetailView.vue'),
+    meta: { role: 'user' }
+  },
+  {
     path: '/super/dashboard/barang/update/:kode_barang',
     name: 'barang-super.update',
     component: () =>
       import(/* webpackChunkName: "home" */ '../views/Super/Vendor/UpdateView.vue'),
     meta: { role: 'super' }
   },
-
+  {
+    path: '/user/dashboard/member',
+    name: 'member',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/User/Member/IndexView.vue'),
+    meta: { role: 'user' }
+  },
+  {
+    path: '/user/dashboard/member/create',
+    name: 'member.create',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/User/Member/CreateView.vue'),
+    meta: { role: 'user' }
+  },
 ]
 
 const router = createRouter({

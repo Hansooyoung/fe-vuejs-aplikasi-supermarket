@@ -284,7 +284,7 @@ onMounted(() => {
           </thead>
           <tbody>
             <tr v-if="pembelianData.length === 0">
-              <td colspan="3" class="text-center py-5 px-4 text-gray-500">
+              <td colspan="7" class="text-center py-5 px-4 text-gray-500">
                 Data pembelian tidak ada
               </td>
             </tr>
