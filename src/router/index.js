@@ -21,6 +21,9 @@ import api from '@/api'
             case 'admin':
               next({ name: 'dashboard-admin' })
               break
+            case 'member':
+              next({ name: 'dashboard-member' })
+              break
             case 'super':
               next({ name: 'dashboard-super' })
               break
@@ -34,6 +37,11 @@ import api from '@/api'
     path: '/login',
     name: 'login',
     component: () => import(/* webpackChunkName: "home" */ '../views/Authentication/SigninView.vue')
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import(/* webpackChunkName: "home" */ '../views/Authentication/SignupView.vue')
   },
   {
     path: '/admin/dashboard',
@@ -52,6 +60,12 @@ import api from '@/api'
     name: 'dashboard-user',
     component: () => import(/* webpackChunkName: "home" */ '../views/User/ECommerceView.vue'),
     meta: { role: 'user' }
+  },
+  {
+    path: '/member/dashboard',
+    name: 'dashboard-member',
+    component: () => import(/* webpackChunkName: "home" */ '../views/Member/ECommerceView.vue'),
+    meta: { role: 'member' }
   },
   {
     path: '/admin/dashboard/kategori',
@@ -193,6 +207,20 @@ import api from '@/api'
     meta: { role: 'admin' }
   },
   {
+    path: '/admin/dashboard/laporan-penjualan/:id',
+    name: 'laporan-penjualan.detail',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/Laporan/DetailPenjualanView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
+    path: '/admin/dashboard/laporan-pembelian/:id',
+    name: 'laporan-pembelian.detail',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/Laporan/DetailPembelianView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
     path: '/admin/dashboard/laporan-pembelian',
     name: 'laporan-pembelian',
     component: () =>
@@ -313,6 +341,20 @@ import api from '@/api'
     meta: { role: 'user' }
   },
   {
+    path: '/user/dashboard/pengajuan-barang',
+    name: 'pengajuan-barang',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/User/Pengajuan/IndexView.vue'),
+    meta: { role: 'user' }
+  },
+  {
+    path: '/user/dashboard/pengajuan-barang/create',
+    name: 'pengajuan-barang.create',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/User/Pengajuan/CreateView.vue'),
+    meta: { role: 'user' }
+  },
+  {
     path: '/super/dashboard/barang/create',
     name: 'barang-super.create',
     component: () =>
@@ -354,6 +396,41 @@ import api from '@/api'
       import(/* webpackChunkName: "home" */ '../views/User/Member/CreateView.vue'),
     meta: { role: 'user' }
   },
+  {
+    path: '/member/dashboard/pengajuan',
+    name: 'pengajuan',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Member/Pengajuan/IndexView.vue'),
+    meta: { role: 'member' }
+  },
+  {
+    path: '/member/dashboard/pengajuan/create',
+    name: 'pengajuan.create',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Member/Pengajuan/CreateView.vue'),
+    meta: { role: 'member' }
+  },
+  {
+    path: '/member/dashboard/pengajuan/update/:id',
+    name: 'pengajuan.update',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Member/Pengajuan/UpdateView.vue'),
+    meta: { role: 'member' }
+  },
+  {
+    path: '/user/dashboard/riwayat-aktifitas',
+    name: 'riwayat-user',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/User/RiwayatView.vue'),
+    meta: { role: 'user' }
+  },
+  {
+    path: '/member/dashboard/riwayat-aktifitas',
+    name: 'riwayat-member',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Member/RiwayatView.vue'),
+    meta: { role: 'member' }
+  },
 ]
 
 const router = createRouter({
@@ -362,45 +439,48 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  console.log('Navigating to:', to.name) // Debugging
+
   const token = localStorage.getItem('token')
 
-  if (to.name === 'login') {
-    next()
+  if (to.name === 'login' || to.name === 'register') {
+    next() // Izinkan akses ke login & register tanpa token
     return
   }
 
-  if (token) {
-    try {
-      const decodedToken = jwtDecode(token)
-      const userRole = decodedToken.role
+  if (!token) {
+    console.log('No token found, redirecting to login')
+    next({ name: 'login' })
+    return
+  }
 
-      checkAuth(token).then((status) => {
-        if (status === 0) {
-          console.error('Token tidak valid')
-          localStorage.removeItem('token')
-          next({ name: 'login' })
-        } else if (status === 1) {
-          // Cek peran dan rute
-          if (to.meta.role && to.meta.role !== userRole) {
-            console.log(`Akses ditolak untuk role ${userRole} ke rute ${to.name}`)
-            next({ name: 'login' })  // Arahkan ke login jika peran tidak sesuai
-          } else {
-            next()  // Lanjutkan jika role sesuai
-          }
+  try {
+    const decodedToken = jwtDecode(token)
+    const userRole = decodedToken.role
+
+    checkAuth(token).then((status) => {
+      if (status === 0 || status === 2) { 
+        console.error('Token tidak valid atau tidak dapat diverifikasi')
+        localStorage.removeItem('token')
+        next({ name: 'login' })
+      } else if (status === 1) {
+        if (to.meta.role && to.meta.role !== userRole) {
+          console.log(`Akses ditolak untuk role ${userRole} ke rute ${to.name}`)
+          next({ name: 'login' })  
         } else {
-          // Jika gagal memeriksa status auth
-          next()
+          next()  
         }
-      })
-    } catch (error) {
-      console.error('Token tidak valid:', error)
-      localStorage.removeItem('token')
-      next({ name: 'login' })
-    }
-  } else {
+      } else {
+        next()
+      }
+    })
+  } catch (error) {
+    console.error('Token tidak valid:', error)
+    localStorage.removeItem('token')
     next({ name: 'login' })
   }
 })
+
 
 async function checkAuth(token) {
   try {

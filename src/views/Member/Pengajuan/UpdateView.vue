@@ -2,7 +2,7 @@
 import api from '@/api';
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2';
 import DefaultCard from '@/components/Forms/DefaultCard.vue';
 import InputGroup from '@/components/Auths/InputGroup.vue';
 import DefaultLayoutAdmin from '@/layouts/DefaultLayoutAdmin.vue';
@@ -11,23 +11,32 @@ const router = useRouter();
 const route = useRoute();
 
 const formData = ref({
-  nama_kategori: '',
+  nama_barang: '',
+  jumlah: 1,
+  pesan: '',
 });
 
 const errors = ref([]);
 const isLoading = ref(false);
 
-// Fetch data kategori saat halaman dimuat
-const fetchDataSatuan = async () => {
-  const kode = route.params.id;
+// Fetch data jika sedang dalam mode edit
+const fetchData = async () => {
+  const id = route.params.id;
+  if (!id) return;
+
   try {
     isLoading.value = true;
     const response = await api.request({
       method: 'GET',
-      url: `/kategori/${kode}`,
+      url: `/pengajuan-barang/${id}/`,
       headers: { 'Accept': 'application/json' },
     });
-    formData.value.nama_kategori = response.data.data.nama_kategori;
+
+    formData.value = {
+      nama_barang: response.data.nama_barang,
+      jumlah: response.data.jumlah,
+      pesan: response.data.pesan || '',
+    };
   } catch (error) {
     console.error(error);
     Swal.fire({
@@ -42,15 +51,16 @@ const fetchDataSatuan = async () => {
   }
 };
 
-// Submit form untuk update kategori
+// Submit form untuk membuat atau memperbarui pengajuan barang
 const handleSubmit = async () => {
   try {
     errors.value = [];
-    const kode = route.params.id;
+    isLoading.value = true;
+    const id = route.params.id;
 
     const response = await api.request({
-      method: 'PUT',
-      url: `/kategori/${kode}`,
+      method: id ? 'PUT' : 'POST',
+      url: id ? `/pengajuan-barang/${id}/` : '/pengajuan-barang',
       headers: {
         'Accept': 'application/json',
         'Content-type': 'application/json',
@@ -60,14 +70,15 @@ const handleSubmit = async () => {
 
     await Swal.fire({
       title: 'Berhasil!',
-      text: 'Satuan berhasil diperbarui.',
+      text: id ? 'Pengajuan barang berhasil diperbarui.' : 'Pengajuan barang berhasil dibuat.',
       icon: 'success',
       confirmButtonText: 'OK',
       confirmButtonColor: '#1d4ed8',
     });
 
-    router.push({ name: 'kategori' });
+    router.push({ name: 'pengajuan' });
   } catch (error) {
+    isLoading.value = false;
     if (error.response && error.response.data.errors) {
       errors.value = error.response.data.errors;
       const errorMessage = Object.values(errors.value).flat()[0];
@@ -92,29 +103,43 @@ const handleSubmit = async () => {
   }
 };
 
-onMounted(fetchDataSatuan);
+onMounted(fetchData);
 </script>
 
 <template>
   <DefaultLayoutAdmin>
     <div class="grid">
       <div class="flex flex-col gap-9">
-        <DefaultCard cardTitle="Edit Satuan Barang">
+        <DefaultCard :cardTitle="route.params.id ? 'Edit Pengajuan Barang' : 'Buat Pengajuan Barang'">
           <form @submit.prevent="handleSubmit">
             <div class="p-6.5">
               <InputGroup
-                label="Nama Satuan Barang"
+                label="Nama Barang"
                 type="text"
-                placeholder="Masukkan nama kategori barang"
-                v-model="formData.nama_kategori"
+                placeholder="Masukkan nama barang"
+                v-model="formData.nama_barang"
                 customClasses="mb-4.5"
-              />    
+              />  
+              <InputGroup
+                label="Jumlah"
+                type="number"
+                placeholder="Masukkan jumlah barang"
+                v-model="formData.jumlah"
+                customClasses="mb-4.5"
+              />  
+              <InputGroup
+                label="Pesan (Opsional)"
+                type="text"
+                placeholder="Tambahkan pesan"
+                v-model="formData.pesan"
+                customClasses="mb-4.5"
+              />  
               <button
                 type="submit"
                 class="flex w-full justify-center rounded bg-primary p-3 font-medium text-white hover:bg-opacity-90"
                 :disabled="isLoading"
               >
-                {{ isLoading ? 'Loading...' : 'Simpan Data' }}
+                {{ isLoading ? 'Loading...' : route.params.id ? 'Perbarui Pengajuan' : 'Ajukan Barang' }}
               </button>
             </div>
           </form>

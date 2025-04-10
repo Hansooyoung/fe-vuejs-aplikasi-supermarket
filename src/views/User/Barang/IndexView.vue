@@ -19,6 +19,14 @@ const modalMessage = ref('') // Pesan yang ditampilkan di dalam modal
 const isDeleteButtonVisible = ref(true) // Untuk menentukan apakah tombol "Hapus" harus ditampilkan
 const showImportModal = ref(false) // Flag untuk menampilkan modal import
 const selectedFile = ref(null) // Menyimpan file yang dipilih untuk import
+const formatRupiah = (angka) => {
+  return new Intl.NumberFormat('id-ID', { 
+    style: 'currency', 
+    currency: 'IDR', 
+    minimumFractionDigits: 0, // Menghilangkan desimal
+    maximumFractionDigits: 0  // Menghilangkan desimal
+  }).format(angka);
+};
 
 watch(searchQuery, () => {
   clearTimeout(searchTimeout)
@@ -308,10 +316,10 @@ onMounted(() => {
                 <p class="text-black dark:text-white">{{ barang.status }}</p>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ barang.harga_jual }}</p>
+                <p class="text-black dark:text-white">{{ formatRupiah(barang.harga_jual) }}</p>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ barang.harga_jual_diskon }}</p>
+                <p class="text-black dark:text-white">{{ formatRupiah(barang.harga_jual_diskon) }}</p>
               </td>
 
               <td class="py-5 px-4">

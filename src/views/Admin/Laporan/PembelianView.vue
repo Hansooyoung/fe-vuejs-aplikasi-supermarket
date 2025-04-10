@@ -14,7 +14,14 @@ const bulan = ref('')
 const tahun = ref('')
 const startDate = ref('')
 const endDate = ref('')
-
+const formatRupiah = (angka) => {
+  return new Intl.NumberFormat('id-ID', { 
+    style: 'currency', 
+    currency: 'IDR', 
+    minimumFractionDigits: 0, // Menghilangkan desimal
+    maximumFractionDigits: 0  // Menghilangkan desimal
+  }).format(angka);
+};
 const showTanggalInput = computed(() => periode.value === 'harian')
 const showBulanInput = computed(() => periode.value === 'bulanan')
 const showTahunInput = computed(() => periode.value === 'tahunan')
@@ -121,7 +128,7 @@ onMounted(fetchDataLaporan)
         </div>
         <div class="bg-blue-100 p-4 rounded-lg text-center">
           <h5 class="text-lg font-semibold">Total Pembelian</h5>
-          <p>Rp {{ rekapLaporan.total_pembelian.toLocaleString() }}</p>
+          <p>{{ formatRupiah(rekapLaporan.total_pembelian) }}</p>
         </div>
         <div class="bg-yellow-100 p-4 rounded-lg text-center">
           <h5 class="text-lg font-semibold">Total Barang</h5>
@@ -146,12 +153,12 @@ onMounted(fetchDataLaporan)
             </tr>
             <tr v-for="(pembelian, index) in laporanPembelianData" :key="index">
               <td class="py-5 px-4">{{ pembelian.id }}</td>
-              <td class="py-5 px-4">Rp {{ pembelian.total.toLocaleString() }}</td>
+              <td class="py-5 px-4">{{ formatRupiah(pembelian.total) }}</td>
               <td class="py-5 px-4">{{ pembelian.tanggal_pembelian }}</td>
               <td class="py-5 px-4">{{ pembelian.vendor.nama_vendor }}</td>
               <td class="py-5 px-4">
                 <button
-                  @click="$router.push({ name: 'pembelian.detail', params: { id: pembelian.id } })"
+                  @click="$router.push({ name: 'laporan-pembelian.detail', params: { id: pembelian.id } })"
                   class="hover:text-primary"
                 >
                   Detail

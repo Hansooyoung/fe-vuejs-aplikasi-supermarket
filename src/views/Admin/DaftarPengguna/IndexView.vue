@@ -201,7 +201,7 @@ onMounted(() => {
         <div class="flex justify-between mb-4">
           <div class="flex gap-4 items-center">
             <button
-              @click="$router.push({ name: 'users.create' })"
+              @click="$router.push({ name: 'daftar-pengguna.create' })"
               class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
             >
               Create Data
@@ -309,7 +309,7 @@ onMounted(() => {
                   <button
                     @click="
                       $router.push({
-                        name: 'users.update',
+                        name: 'daftar-pengguna.update',
                         params: { id: users.id }
                       })
                     "

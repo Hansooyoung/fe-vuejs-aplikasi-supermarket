@@ -34,7 +34,7 @@ const fetchUser = async () => {
         'Accept': 'application/json',
       },
     });
-    const user = response.data;
+    const user = response.data.data;
     formData.value = {
       nama: user.nama,
       email: user.email,

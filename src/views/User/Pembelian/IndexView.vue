@@ -19,6 +19,14 @@ const modalMessage = ref('') // Pesan yang ditampilkan di dalam modal
 const isDeleteButtonVisible = ref(true) // Untuk menentukan apakah tombol "Hapus" harus ditampilkan
 const showImportModal = ref(false) // Flag untuk menampilkan modal import
 const selectedFile = ref(null) // Menyimpan file yang dipilih untuk import
+const formatRupiah = (angka) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0, // Menghilangkan desimal
+    maximumFractionDigits: 0 // Menghilangkan desimal
+  }).format(angka)
+}
 
 watch(searchQuery, () => {
   clearTimeout(searchTimeout)
@@ -46,6 +54,36 @@ const fetchDataPembelian = async () => {
     console.error('Error fetching Pembelian barang:', error)
   }
 }
+const updateTanggalMasuk = async (id, tanggalMasuk) => {
+  try {
+    const response = await api.request({
+      method: 'PUT',
+      url: `/pembelian/${id}/tanggal-masuk`,
+      data: {
+        tanggal_masuk: tanggalMasuk,
+      },
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    Swal.fire({
+      title: 'Tanggal Masuk Diperbarui',
+      text: 'Tanggal masuk berhasil diperbarui.',
+      icon: 'success',
+      confirmButtonText: 'OK',
+    });
+    fetchDataPembelian();
+  } catch (error) {
+    console.error('Error updating tanggal masuk:', error);
+    Swal.fire({
+      title: 'Gagal',
+      text: 'Terjadi kesalahan saat memperbarui tanggal masuk.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+    });
+  }
+};
 
 const nextPage = () => {
   if (currentPage.value < totalPages.value) {
@@ -264,21 +302,15 @@ onMounted(() => {
               <th class="min-w-[220px] py-4 px-4 font-medium text-black dark:text-white xl:pl-11">
                 ID
               </th>
-              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                Vendor
-              </th>
-              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                User
-              </th>
+              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">Vendor</th>
+              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">User</th>
               <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
                 Tanggal Pembelian
               </th>
               <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
                 Tanggal Masuk
               </th>
-              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                Total
-              </th>
+              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">Total</th>
               <th class="py-4 px-4 font-medium text-black dark:text-white">Actions</th>
             </tr>
           </thead>
@@ -304,10 +336,20 @@ onMounted(() => {
                 <p class="text-black dark:text-white">{{ pembelian.tanggal_pembelian }}</p>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ pembelian.tanggal_masuk }}</p>
+                <p v-if="pembelian.tanggal_masuk === null" class="text-red-500">
+                  Tentukan tanggal
+                  <input
+                    type="date"
+                    v-model="pembelian.tanggal_masuk"
+                    class="ml-2 border px-2 py-1 rounded-md"
+                    @change="updateTanggalMasuk(pembelian.id, pembelian.tanggal_masuk)"
+                  />
+                </p>
+                <p v-else class="text-black dark:text-white">{{ pembelian.tanggal_masuk }}</p>
               </td>
+
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ pembelian.total }}</p>
+                <p class="text-black dark:text-white">{{ formatRupiah(pembelian.total) }}</p>
               </td>
               <td class="py-5 px-4">
                 <div class="flex items-center space-x-3.5">

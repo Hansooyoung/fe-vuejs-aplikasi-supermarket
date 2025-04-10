@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import api from '@/api';
 import { useRoute } from 'vue-router';
-import DefaultLayoutUser from '@/layouts/DefaultLayoutUser.vue';
+import DefaultLayoutAdmin from '@/layouts/DefaultLayoutAdmin.vue';
 
 const route = useRoute();
 const penjualan = ref(null); 
@@ -39,27 +39,7 @@ const fetchDataDetail = async () => {
   }
 };
 
-// Update tanggal masuk
-const updateTanggalMasuk = async () => {
-  if (!tanggalMasukInput.value) {
-    alert("Tanggal masuk harus diisi.");
-    return;
-  }
 
-  try {
-    const response = await api.request({
-      method: 'PUT',
-      url: `/penjualan/${penjualan.value.id}/tanggal-masuk`,
-      data: { tanggal_masuk: tanggalMasukInput.value },
-      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-    });
-
-    alert(response.data.message);
-    fetchDataDetail(); 
-  } catch (error) {
-    alert(error.response?.data?.error || "Gagal memperbarui tanggal masuk.");
-  }
-};
 
 // Jalankan fetch saat komponen dipasang
 onMounted(() => {
@@ -68,7 +48,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <DefaultLayoutUser>
+  <DefaultLayoutAdmin>
     <div
       class="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1"
     >
@@ -131,7 +111,7 @@ onMounted(() => {
         </table>
       </div>
     </div>
-  </DefaultLayoutUser>
+  </DefaultLayoutAdmin>
 </template>
 
 <style scoped>

@@ -2,73 +2,108 @@
 import 'jspdf-autotable'
 
 import api from '@/api'
-import DefaultLayoutUser from '@/layouts/DefaultLayoutUser.vue'
+import DefaultLayoutMembers from '@/layouts/DefaultLayoutMembers.vue'
 import { ref, onMounted, watch } from 'vue'
 import Swal from 'sweetalert2'
 
 // Data barang
-const penjualanData = ref([])
+const pengajuanData = ref([])
 const currentPage = ref(1) // Halaman saat ini
 const totalPages = ref(1) // Total halaman
 const searchQuery = ref('')
 let searchTimeout = null // Timeout untuk debounce
 const showExportModal = ref(false) // Flag untuk menampilkan modal export
 const showModal = ref(false) // Flag untuk menampilkan modal
-const itemToDelete = ref(null) // Menyimpan Penjualan barang yang akan dihapus
+const itemToDelete = ref(null) // Menyimpan Kategori barang yang akan dihapus
 const modalMessage = ref('') // Pesan yang ditampilkan di dalam modal
 const isDeleteButtonVisible = ref(true) // Untuk menentukan apakah tombol "Hapus" harus ditampilkan
 const showImportModal = ref(false) // Flag untuk menampilkan modal import
 const selectedFile = ref(null) // Menyimpan file yang dipilih untuk import
-const formatRupiah = (angka) => {
-  return new Intl.NumberFormat('id-ID', { 
-    style: 'currency', 
-    currency: 'IDR', 
-    minimumFractionDigits: 0, // Menghilangkan desimal
-    maximumFractionDigits: 0  // Menghilangkan desimal
-  }).format(angka);
-};
+
 watch(searchQuery, () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     currentPage.value = 1
-    fetchDataPenjualan()
+    fetchDataPengajuan()
   }, 5000)
 })
 
 // Fetch data dari API
-const fetchDataPenjualan = async () => {
+const fetchDataPengajuan = async () => {
   try {
     const response = await api.request({
       method: 'GET',
-      url: `/penjualan?page=${currentPage.value}&search=${searchQuery.value}`,
+      url: `/pengajuan-barang?page=${currentPage.value}&search=${searchQuery.value}`,
       headers: {
         Accept: 'application/json',
         'Content-type': 'application/json'
       }
     })
 
-    penjualanData.value = response.data.data
-    totalPages.value = response.data.pagination.last_page // Total halaman dari API
+    pengajuanData.value = response.data.data
+    totalPages.value = response.data.pagination.last_page
   } catch (error) {
-    console.error('Error fetching Penjualan barang:', error)
+    console.error('Error fetching pengajuan barang:', error)
   }
 }
 
 const nextPage = () => {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
-    fetchDataPenjualan()
+    fetchDataPengajuan()
   }
 }
 
 const prevPage = () => {
   if (currentPage.value > 1) {
     currentPage.value--
-    fetchDataPenjualan()
+    fetchDataPengajuan()
   }
 }
 
+// Fungsi untuk menghapus item
+const deleteItem = async () => {
+  if (!itemToDelete.value) {
+    console.error('No item selected for deletion')
+    return
+  }
 
+  try {
+    await api.request({
+      method: 'DELETE',
+      url: `/pengajuan-barang/${itemToDelete.value.id}`,
+      headers: {
+        Accept: 'application/json',
+        'Content-type': 'application/json'
+      }
+    })
+
+    fetchDataPengajuan()
+    showModal.value = false
+    Swal.fire({
+      title: 'Berhasil!',
+      text: 'Data Pengajuan berhasil dihapus.',
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#1d4ed8'
+    })
+  } catch (error) {
+    if (error.response?.status === 400) {
+      modalMessage.value = 'Data tidak bisa dihapus karena memiliki relasi dengan data lain.'
+      isDeleteButtonVisible.value = false
+    } else {
+      alert('Terjadi kesalahan saat menghapus data.')
+    }
+    console.error('Error deleting item:', error)
+  }
+}
+
+const confirmDelete = (pengajuan) => {
+  itemToDelete.value = pengajuan
+  modalMessage.value = 'Apakah Anda yakin ingin menghapus Kategori barang ini?'
+  isDeleteButtonVisible.value = true
+  showModal.value = true
+}
 const handleFileInput = (event) => {
   selectedFile.value = event.target.files[0]
 }
@@ -85,7 +120,7 @@ const importExcel = async () => {
   try {
     await api.request({
       method: 'POST',
-      url: '/import-penjualan',
+      url: '/import-pengajuan',
       headers: {
         'Content-Type': 'multipart/form-data'
       },
@@ -93,7 +128,7 @@ const importExcel = async () => {
     })
     alert('Data berhasil diimpor.')
     showImportModal.value = false
-    fetchDataPenjualan()
+    fetchDataPengajuan()
   } catch (error) {
     console.error('Error importing data:', error)
     alert('Terjadi kesalahan saat impor data.')
@@ -103,19 +138,34 @@ const exportToPDF = async () => {
   try {
     const response = await api.request({
       method: 'GET',
-      url: '/penjualan/export/pdf',
+      url: '/pengajuan/export/pdf',
       responseType: 'blob'
     })
 
     const blob = new Blob([response.data], { type: 'application/pdf' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = 'laporan-penjualan.pdf'
+    link.download = 'laporan-pengajuan.pdf'
     link.click()
     URL.revokeObjectURL(link.href)
-  } catch (error) {
+
+    Swal.fire({
+      title: 'Berhasil!',
+      text: 'Export PDF berhasil!',
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#1d4ed8'
+    })
+  } catch (error) { 
     console.error('Error exporting PDF:', error)
-    alert('Terjadi kesalahan saat export PDF.')
+
+    Swal.fire({
+      title: 'Gagal!',
+      text: 'Terjadi kesalahan saat export PDF. Pastikan Internet Download Manager (IDM) tidak mengganggu proses download.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#d33'
+    })
   }
 }
 
@@ -123,7 +173,7 @@ const exportToExcel = async () => {
   try {
     const response = await api.request({
       method: 'GET',
-      url: '/penjualan/export/excel',
+      url: '/pengajuan/export/excel',
       responseType: 'blob'
     })
 
@@ -132,14 +182,30 @@ const exportToExcel = async () => {
     })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = 'laporan-penjualan.xlsx'
+    link.download = 'laporan-pengajuan.xlsx'
     link.click()
     URL.revokeObjectURL(link.href)
+
+    Swal.fire({
+      title: 'Berhasil!',
+      text: 'Export Excel berhasil!',
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#1d4ed8'
+    })
   } catch (error) {
     console.error('Error exporting Excel:', error)
-    alert('Terjadi kesalahan saat export Excel.')
+
+    Swal.fire({
+      title: 'Gagal!',
+      text: 'Terjadi kesalahan saat export Excel. Pastikan Internet Download Manager (IDM) tidak mengganggu proses download.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#d33'
+    })
   }
 }
+
 
 const openExportModal = () => {
   showExportModal.value = true
@@ -150,30 +216,32 @@ const closeExportModal = () => {
 }
 // Jalankan fetch data saat komponen terpasang
 onMounted(() => {
-  fetchDataPenjualan()
+  fetchDataPengajuan()
 })
 </script>
 
 <template>
-  <DefaultLayoutUser>
+  <DefaultLayoutMembers>
     <div
       class="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1"
     >
-      <h4 class="mb-6 text-xl font-semibold text-black dark:text-white">Transaksi Penjualan</h4>
+      <h4 class="mb-6 text-xl font-semibold text-black dark:text-white">Pengajuan Barang</h4>
       <!-- Action Buttons -->
 
       <div class="max-w-full overflow-x-auto">
         <div class="flex justify-between mb-4">
           <div class="flex gap-4 items-center">
+
+
             <div class="flex items-center space-x-2">
               <input
                 v-model="searchQuery"
                 type="text"
-                placeholder="Cari penjualan..."
+                placeholder="Cari Nama Barang..."
                 class="border px-4 py-2 rounded-md w-1/2"
               />
               <button
-                @click="fetchDataPenjualan"
+                @click="fetchDataPengajuan"
                 class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
                 Cari
@@ -230,57 +298,69 @@ onMounted(() => {
                 ID
               </th>
               <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                Nama Member
+                Nama Barang
               </th>
+              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">Jumlah</th>
+              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">Pesan</th>
               <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                User
+                Tanggal Pengajuan
               </th>
-              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                Total Penjualan
-              </th>
-              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                Total Keuntungan
-              </th>
-
+              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">Status</th>
               <th class="py-4 px-4 font-medium text-black dark:text-white">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-if="penjualanData.length === 0">
-              <td colspan="6" class="text-center py-5 px-4 text-gray-500">
-                Data penjualan tidak ada
+            <tr v-if="pengajuanData.length === 0">
+              <td colspan="7" class="text-center py-5 px-4 text-gray-500">
+                Data pengajuan tidak ada
               </td>
             </tr>
-            <tr v-for="(penjualan, index) in penjualanData" :key="index">
+            <tr v-for="(pengajuan, index) in pengajuanData" :key="index">
               <td class="py-5 px-4 pl-9 xl:pl-11">
                 <h5 class="font-medium text-black dark:text-white">
-                  {{ penjualan.id }}
+                  {{ index + 1 }}
                 </h5>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ penjualan.nama_member }}</p>
+                <p class="text-black dark:text-white">{{ pengajuan.nama_barang }}</p>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ penjualan.nama_user }}</p>
+                <p class="text-black dark:text-white">{{ pengajuan.jumlah }}</p>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ formatRupiah(penjualan.total_penjualan) }}</p>
+                <p class="text-black dark:text-white">{{ pengajuan.pesan }}</p>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ formatRupiah(penjualan.total_keuntungan) }}</p>
+                <p class="text-black dark:text-white">{{ pengajuan.tanggal_pengajuan }}</p>
               </td>
+              <td class="py-5 px-4 text-center">
+                <span
+                  class="px-4 py-2 text-sm font-semibold text-black dark:text-white rounded-full"
+                  :class="{
+                    'bg-green-200 dark:bg-green-700': pengajuan.status === 'Approved',
+                    'bg-red-200 dark:bg-red-700': pengajuan.status === 'Rejected',
+                    'bg-gray-200 dark:bg-gray-700': pengajuan.status === 'Pending'
+                  }"
+                >
+                  {{ pengajuan.status }}
+                </span>
+              </td>
+
               <td class="py-5 px-4">
                 <div class="flex items-center space-x-3.5">
                   <button
                     @click="
                       $router.push({
-                        name: 'penjualan.detail',
-                        params: { id: penjualan.id }
+                        name: 'pengajuan.update',
+                        params: { id: pengajuan.id }
                       })
                     "
                     class="hover:text-primary"
                   >
-                    Detail
+                    Edit
+                  </button>
+                  <button @click="confirmDelete(pengajuan)" class="hover:text-primary">
+                    Delete
                   </button>
                 </div>
               </td>
@@ -315,7 +395,7 @@ onMounted(() => {
       class="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center"
     >
       <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-        <h3 class="text-xl font-semibold mb-4">Import Penjualan Barang</h3>
+        <h3 class="text-xl font-semibold mb-4">Import Kategori Barang</h3>
         <input type="file" @change="handleFileInput" class="mb-4 w-full" />
         <div class="flex justify-between gap-3">
           <button
@@ -360,7 +440,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-  </DefaultLayoutUser>
+  </DefaultLayoutMembers>
 </template>
 
 <style scoped>

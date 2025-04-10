@@ -7,115 +7,185 @@ import { ref, onMounted, watch } from 'vue'
 import Swal from 'sweetalert2'
 
 // Data barang
-const penjualanData = ref([])
+const pengajuanData = ref([])
 const currentPage = ref(1) // Halaman saat ini
 const totalPages = ref(1) // Total halaman
 const searchQuery = ref('')
 let searchTimeout = null // Timeout untuk debounce
 const showExportModal = ref(false) // Flag untuk menampilkan modal export
 const showModal = ref(false) // Flag untuk menampilkan modal
-const itemToDelete = ref(null) // Menyimpan Penjualan barang yang akan dihapus
+const itemToDelete = ref(null) // Menyimpan Kategori barang yang akan dihapus
 const modalMessage = ref('') // Pesan yang ditampilkan di dalam modal
 const isDeleteButtonVisible = ref(true) // Untuk menentukan apakah tombol "Hapus" harus ditampilkan
 const showImportModal = ref(false) // Flag untuk menampilkan modal import
-const selectedFile = ref(null) // Menyimpan file yang dipilih untuk import
-const formatRupiah = (angka) => {
-  return new Intl.NumberFormat('id-ID', { 
-    style: 'currency', 
-    currency: 'IDR', 
-    minimumFractionDigits: 0, // Menghilangkan desimal
-    maximumFractionDigits: 0  // Menghilangkan desimal
-  }).format(angka);
-};
+const showEditModal = ref(false)
+const selectedPengajuan = ref(null)
+const editStatus = ref('')
+
+const editKeterangan = ref('')
+
+const openEditModal = (pengajuan) => {
+  selectedPengajuan.value = pengajuan
+  editStatus.value = pengajuan.status
+  editKeterangan.value = pengajuan.keterangan || '' // Pastikan keterangan bisa kosong
+  showEditModal.value = true
+}
+
+
+const updateStatusPengajuan = async () => {
+  if (!selectedPengajuan.value) return
+
+  try {
+    const response = await api.request({
+      method: 'PUT',
+      url: `/pengajuan-barang/${selectedPengajuan.value.id}/update-status`,
+      data: { 
+        status: editStatus.value,
+        keterangan: editKeterangan.value // Tambahkan keterangan
+      },
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' }
+    })
+
+    showEditModal.value = false
+    fetchDataPengajuan() // Refresh data
+
+    Swal.fire({
+      title: 'Berhasil!',
+      text: 'Status pengajuan berhasil diperbarui.',
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#1d4ed8'
+    })
+  } catch (error) {
+    console.error('Error updating status:', error)
+    Swal.fire({
+      title: 'Gagal!',
+      text: 'Terjadi kesalahan saat memperbarui status.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#d33'
+    })
+  }
+}
+
+
 watch(searchQuery, () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     currentPage.value = 1
-    fetchDataPenjualan()
+    fetchDataPengajuan()
   }, 5000)
 })
 
 // Fetch data dari API
-const fetchDataPenjualan = async () => {
+const fetchDataPengajuan = async () => {
   try {
     const response = await api.request({
       method: 'GET',
-      url: `/penjualan?page=${currentPage.value}&search=${searchQuery.value}`,
+      url: `/pengajuan-barang?page=${currentPage.value}&search=${searchQuery.value}`,
       headers: {
         Accept: 'application/json',
         'Content-type': 'application/json'
       }
     })
 
-    penjualanData.value = response.data.data
-    totalPages.value = response.data.pagination.last_page // Total halaman dari API
+    pengajuanData.value = response.data.data
+    totalPages.value = response.data.pagination.last_page
   } catch (error) {
-    console.error('Error fetching Penjualan barang:', error)
+    console.error('Error fetching Kategori barang:', error)
   }
 }
 
 const nextPage = () => {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
-    fetchDataPenjualan()
+    fetchDataPengajuan()
   }
 }
 
 const prevPage = () => {
   if (currentPage.value > 1) {
     currentPage.value--
-    fetchDataPenjualan()
+    fetchDataPengajuan()
   }
 }
 
-
-const handleFileInput = (event) => {
-  selectedFile.value = event.target.files[0]
-}
-
-const importExcel = async () => {
-  if (!selectedFile.value) {
-    alert('Silakan pilih file Excel terlebih dahulu.')
+// Fungsi untuk menghapus item
+const deleteItem = async () => {
+  if (!itemToDelete.value) {
+    console.error('No item selected for deletion')
     return
   }
 
-  const formData = new FormData()
-  formData.append('file', selectedFile.value)
-
   try {
     await api.request({
-      method: 'POST',
-      url: '/import-penjualan',
+      method: 'DELETE',
+      url: `/pengajuan-barang/${itemToDelete.value.id}`,
       headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      data: formData
+        Accept: 'application/json',
+        'Content-type': 'application/json'
+      }
     })
-    alert('Data berhasil diimpor.')
-    showImportModal.value = false
-    fetchDataPenjualan()
+
+    fetchDataPengajuan()
+    showModal.value = false
+    Swal.fire({
+      title: 'Berhasil!',
+      text: 'Data Pengajuan berhasil dihapus.',
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#1d4ed8'
+    })
   } catch (error) {
-    console.error('Error importing data:', error)
-    alert('Terjadi kesalahan saat impor data.')
+    if (error.response?.status === 400) {
+      modalMessage.value = 'Data tidak bisa dihapus karena memiliki relasi dengan data lain.'
+      isDeleteButtonVisible.value = false
+    } else {
+      alert('Terjadi kesalahan saat menghapus data.')
+    }
+    console.error('Error deleting item:', error)
   }
 }
+
+const confirmDelete = (pengajuan) => {
+  itemToDelete.value = pengajuan
+  modalMessage.value = 'Apakah Anda yakin ingin menghapus Kategori barang ini?'
+  isDeleteButtonVisible.value = true
+  showModal.value = true
+}
+
 const exportToPDF = async () => {
   try {
     const response = await api.request({
       method: 'GET',
-      url: '/penjualan/export/pdf',
+      url: '/pengajuan/export/pdf',
       responseType: 'blob'
     })
 
     const blob = new Blob([response.data], { type: 'application/pdf' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = 'laporan-penjualan.pdf'
+    link.download = 'laporan-pengajuan.pdf'
     link.click()
     URL.revokeObjectURL(link.href)
+
+    Swal.fire({
+      title: 'Berhasil!',
+      text: 'Export PDF berhasil!',
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#1d4ed8'
+    })
   } catch (error) {
     console.error('Error exporting PDF:', error)
-    alert('Terjadi kesalahan saat export PDF.')
+
+    Swal.fire({
+      title: 'Gagal!',
+      text: 'Terjadi kesalahan saat export PDF. Pastikan Internet Download Manager (IDM) tidak mengganggu proses download.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#d33'
+    })
   }
 }
 
@@ -123,7 +193,7 @@ const exportToExcel = async () => {
   try {
     const response = await api.request({
       method: 'GET',
-      url: '/penjualan/export/excel',
+      url: '/pengajuan/export/excel',
       responseType: 'blob'
     })
 
@@ -132,12 +202,27 @@ const exportToExcel = async () => {
     })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = 'laporan-penjualan.xlsx'
+    link.download = 'laporan-pengajuan.xlsx'
     link.click()
     URL.revokeObjectURL(link.href)
+
+    Swal.fire({
+      title: 'Berhasil!',
+      text: 'Export Excel berhasil!',
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#1d4ed8'
+    })
   } catch (error) {
     console.error('Error exporting Excel:', error)
-    alert('Terjadi kesalahan saat export Excel.')
+
+    Swal.fire({
+      title: 'Gagal!',
+      text: 'Terjadi kesalahan saat export Excel. Pastikan Internet Download Manager (IDM) tidak mengganggu proses download.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#d33'
+    })
   }
 }
 
@@ -150,7 +235,7 @@ const closeExportModal = () => {
 }
 // Jalankan fetch data saat komponen terpasang
 onMounted(() => {
-  fetchDataPenjualan()
+  fetchDataPengajuan()
 })
 </script>
 
@@ -159,21 +244,27 @@ onMounted(() => {
     <div
       class="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1"
     >
-      <h4 class="mb-6 text-xl font-semibold text-black dark:text-white">Transaksi Penjualan</h4>
+      <h4 class="mb-6 text-xl font-semibold text-black dark:text-white">Pengajuan Barang</h4>
       <!-- Action Buttons -->
 
       <div class="max-w-full overflow-x-auto">
         <div class="flex justify-between mb-4">
           <div class="flex gap-4 items-center">
             <div class="flex items-center space-x-2">
+              <button
+              @click="$router.push({ name: 'pengajuan-barang.create' })"
+              class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
+            >
+              Create Data
+            </button>
               <input
                 v-model="searchQuery"
                 type="text"
-                placeholder="Cari penjualan..."
+                placeholder="Cari Nama Barang..."
                 class="border px-4 py-2 rounded-md w-1/2"
               />
               <button
-                @click="fetchDataPenjualan"
+                @click="fetchDataPengajuan"
                 class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
                 Cari
@@ -182,12 +273,6 @@ onMounted(() => {
           </div>
 
           <div class="flex gap-2">
-            <button
-              @click="showImportModal = true"
-              class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
-            >
-              Import Excel
-            </button>
             <button
               @click="openExportModal"
               class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
@@ -205,6 +290,7 @@ onMounted(() => {
           <div class="bg-white p-6 rounded-lg shadow-lg w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
             <h2 class="text-xl mb-4">Pilih Format Export</h2>
             <div class="flex justify-between w-full">
+              
               <button
                 @click="exportToPDF"
                 class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
@@ -230,58 +316,78 @@ onMounted(() => {
                 ID
               </th>
               <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                Nama Member
+                Nama Barang
               </th>
+              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">Jumlah</th>
+              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">Pesan</th>
+              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">Keterangan</th>
               <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                User
+                Tanggal Pengajuan
               </th>
-              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                Total Penjualan
-              </th>
-              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                Total Keuntungan
-              </th>
-
+              <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">Status</th>
               <th class="py-4 px-4 font-medium text-black dark:text-white">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-if="penjualanData.length === 0">
-              <td colspan="6" class="text-center py-5 px-4 text-gray-500">
-                Data penjualan tidak ada
+            <tr v-if="pengajuanData.length === 0">
+              <td colspan="7" class="text-center py-5 px-4 text-gray-500">
+                Data pengajuan tidak ada
               </td>
             </tr>
-            <tr v-for="(penjualan, index) in penjualanData" :key="index">
+            <tr v-for="(pengajuan, index) in pengajuanData" :key="index">
               <td class="py-5 px-4 pl-9 xl:pl-11">
                 <h5 class="font-medium text-black dark:text-white">
-                  {{ penjualan.id }}
+                  {{ index + 1 }}
                 </h5>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ penjualan.nama_member }}</p>
+                <p class="text-black dark:text-white">{{ pengajuan.nama_barang }}</p>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ penjualan.nama_user }}</p>
+                <p class="text-black dark:text-white">{{ pengajuan.jumlah }}</p>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ formatRupiah(penjualan.total_penjualan) }}</p>
+                <p class="text-black dark:text-white">{{ pengajuan.pesan }}</p>
               </td>
               <td class="py-5 px-4">
-                <p class="text-black dark:text-white">{{ formatRupiah(penjualan.total_keuntungan) }}</p>
+                <p class="text-black dark:text-white">{{ pengajuan.keterangan }}</p>
               </td>
+              <td class="py-5 px-4">
+                <p class="text-black dark:text-white">{{ pengajuan.tanggal_pengajuan }}</p>
+              </td>
+              <td class="py-5 px-4">
+                <p
+                  :class="{
+                    'text-green-600': pengajuan.status === 'Approved',
+                    'text-red-600': pengajuan.status === 'Rejected',
+                    'text-black dark:text-white':
+                      pengajuan.status !== 'Approved' && pengajuan.status !== 'Rejected'
+                  }"
+                >
+                  {{ pengajuan.status }}
+                </p>
+              </td>
+
               <td class="py-5 px-4">
                 <div class="flex items-center space-x-3.5">
                   <button
-                    @click="
-                      $router.push({
-                        name: 'penjualan.detail',
-                        params: { id: penjualan.id }
-                      })
-                    "
-                    class="hover:text-primary"
+                    @click="openEditModal(pengajuan)"
+                    :disabled="pengajuan.status !== 'Pending'"
+                    class="px-4 py-2 rounded text-white"
+                    :class="{
+                      'bg-blue-600 hover:bg-blue-700': pengajuan.status === 'Pending',
+                      'bg-gray-400 cursor-not-allowed': pengajuan.status !== 'Pending'
+                    }"
                   >
-                    Detail
+                    Edit
                   </button>
+
+                  <!-- <button
+                    @click="confirmDelete(pengajuan)"
+                    class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                  >
+                    Hapus
+                  </button> -->
                 </div>
               </td>
             </tr>
@@ -309,30 +415,6 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Modal Konfirmasi -->
-    <div
-      v-if="showImportModal"
-      class="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center"
-    >
-      <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-        <h3 class="text-xl font-semibold mb-4">Import Penjualan Barang</h3>
-        <input type="file" @change="handleFileInput" class="mb-4 w-full" />
-        <div class="flex justify-between gap-3">
-          <button
-            @click="importExcel"
-            class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
-          >
-            Import
-          </button>
-          <button
-            @click="showImportModal = false"
-            class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
-          >
-            Batal
-          </button>
-        </div>
-      </div>
-    </div>
     <div
       v-if="showModal"
       class="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center"
@@ -360,6 +442,29 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <!-- Modal Edit Status -->
+<div v-if="showEditModal" class="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
+    <h2 class="text-xl mb-4">Edit Status Pengajuan</h2>
+    
+    <label class="block text-sm font-medium text-gray-700">Status</label>
+    <select v-model="editStatus" class="border px-4 py-2 rounded-md w-full">
+      <option value="Approved">Approved</option>
+      <option value="Rejected">Rejected</option>
+    </select>
+
+    <label class="block mt-4 text-sm font-medium text-gray-700">Keterangan (Opsional)</label>
+    <textarea v-model="editKeterangan" class="border px-4 py-2 rounded-md w-full" placeholder="Masukkan keterangan"></textarea>
+
+    <div class="mt-4 flex justify-between">
+      <button @click="updateStatusPengajuan" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Simpan
+      </button>
+      <button @click="showEditModal = false" class="text-red-500">Batal</button>
+    </div>
+  </div>
+</div>
+
   </DefaultLayoutUser>
 </template>
 

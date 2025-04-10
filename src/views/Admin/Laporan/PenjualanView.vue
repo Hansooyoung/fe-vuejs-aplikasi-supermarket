@@ -55,7 +55,14 @@ const fetchDataLaporan = async () => {
     console.error('Error fetching laporan penjualan:', error)
   }
 }
-
+const formatRupiah = (angka) => {
+  return new Intl.NumberFormat('id-ID', { 
+    style: 'currency', 
+    currency: 'IDR', 
+    minimumFractionDigits: 0, // Menghilangkan desimal
+    maximumFractionDigits: 0  // Menghilangkan desimal
+  }).format(angka);
+};
 // Panggil data saat komponen dimuat
 onMounted(fetchDataLaporan)
 </script>
@@ -93,7 +100,7 @@ onMounted(fetchDataLaporan)
         </div>
         <div class="bg-green-100 p-4 rounded-lg text-center">
           <h5 class="text-lg font-semibold text-green-700">Total Keuntungan</h5>
-          <p class="text-green-900">Rp {{ rekapLaporan.total_keuntungan.toLocaleString() }}</p>
+          <p class="text-green-900"> {{ formatRupiah(rekapLaporan.total_keuntungan) }}</p>
         </div>
         <div class="bg-yellow-100 p-4 rounded-lg text-center">
           <h5 class="text-lg font-semibold text-yellow-700">Total Barang</h5>
@@ -101,7 +108,7 @@ onMounted(fetchDataLaporan)
         </div>
         <div class="bg-red-100 p-4 rounded-lg text-center">
           <h5 class="text-lg font-semibold text-red-700">Total Penjualan</h5>
-          <p class="text-red-900">Rp {{ rekapLaporan.total_penjualan.toLocaleString() }}</p>
+          <p class="text-red-900"> {{ formatRupiah(rekapLaporan.total_penjualan) }}</p>
         </div>
       </div>
       
@@ -123,11 +130,11 @@ onMounted(fetchDataLaporan)
             </tr>
             <tr v-for="(penjualan, index) in laporanPenjualanData" :key="index">
               <td class="py-5 px-4 pl-9 xl:pl-11">{{ penjualan.id }}</td>
-              <td class="py-5 px-4">Rp {{ penjualan.total_penjualan.toLocaleString() }}</td>
-              <td class="py-5 px-4">Rp {{ penjualan.total_keuntungan.toLocaleString() }}</td>
+              <td class="py-5 px-4"> {{ formatRupiah(penjualan.total_penjualan) }}</td>
+              <td class="py-5 px-4"> {{ formatRupiah(penjualan.total_keuntungan) }}</td>
               <td class="py-5 px-4">{{ penjualan.tanggal_penjualan }}</td>
               <td class="py-5 px-4">
-                <button @click="$router.push({ name: 'penjualan.detail', params: { id: penjualan.id } })" class="hover:text-primary">Detail</button>
+                <button @click="$router.push({ name: 'laporan-penjualan.detail', params: { id: penjualan.id } })" class="hover:text-primary">Detail</button>
               </td>
             </tr>
           </tbody>

@@ -15,6 +15,7 @@ const formData = ref({
   email: '',
   no_hp: '',
   password: '',
+  alamat: '',
 });
 
 // Error handling
@@ -119,6 +120,16 @@ const handleSubmit = async () => {
               />
               <p v-if="errors.no_hp" class="text-sm text-red-600">
                 {{ errors.no_hp[0] }}
+              </p>
+              <InputGroup
+                label="Alamat"
+                type="text"
+                placeholder="Masukkan Alamat"
+                v-model="formData.alamat"
+                customClasses="mb-4.5"
+              />
+              <p v-if="errors.alamat" class="text-sm text-red-600">
+                {{ errors.alamat[0] }}
               </p>
 
               <!-- Password -->
