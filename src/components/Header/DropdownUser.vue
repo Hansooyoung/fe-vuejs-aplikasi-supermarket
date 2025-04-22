@@ -1,14 +1,48 @@
-<script setup lang="ts">
+<script setup>
 import { onClickOutside } from '@vueuse/core'
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router';
+import api from '@/api'
+
 const router = useRouter();
 
-const handleLogout = () => {
-  // Hapus token dari local storage
-  localStorage.removeItem('token');
+const userData = ref({
+  name: '',
+  role: ''
+})
 
-  // Arahkan ke halaman login
+// Computed property to translate role values
+const displayRole = computed(() => {
+  switch(userData.value.role) {
+    case 'user':
+      return 'Kasir'
+    case 'operator':
+      return 'Operator'
+    case 'admin':
+      return 'Manager'
+    case 'super':
+      return 'Super'
+    default:
+      return userData.value.role // Fallback for unknown roles
+  }
+})
+
+const fetchUserData = async () => {
+  try {
+    const response = await api.get('/user')
+    userData.value.name = response.data.nama
+    userData.value.role = response.data.role
+  } catch (error) {
+    console.error('Failed to fetch user data:', error)
+  }
+}
+
+onMounted(() => {
+  fetchUserData()
+})
+
+const handleLogout = () => {
+  localStorage.removeItem('token');
   router.push({ name: 'login' });
 };
 
@@ -28,8 +62,8 @@ onClickOutside(target, () => {
       @click.prevent="dropdownOpen = !dropdownOpen"
     >
       <span class="hidden text-right lg:block">
-        <span class="block text-sm font-medium text-black dark:text-white">Dani Pratama</span>
-        <span class="block text-xs font-medium">BE DEVELOPER AAMIIN</span>
+        <span class="block text-sm font-medium text-black dark:text-white">{{ userData.name }}</span>
+        <span class="block text-xs font-medium">{{ displayRole }}</span>
       </span>
 
       <span class="h-12 w-12 rounded-full">

@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '@/api'
 import DefaultLayoutAdmin from '@/layouts/DefaultLayoutAdmin.vue'
-
+const showExportModal = ref(false) // Flag untuk menampilkan modal export
 const laporanPembelianData = ref([])
 const rekapLaporan = ref({ total_pembelian: 0, total_barang: 0 })
 const currentPage = ref(1)
@@ -26,6 +26,74 @@ const showTanggalInput = computed(() => periode.value === 'harian')
 const showBulanInput = computed(() => periode.value === 'bulanan')
 const showTahunInput = computed(() => periode.value === 'tahunan')
 const showCustomRange = computed(() => periode.value === 'custom')
+const openExportModal = () => {
+  showExportModal.value = true
+}
+
+const closeExportModal = () => {
+  showExportModal.value = false
+}
+const exportToPDF = async () => {
+  try {
+    const response = await api.request({
+      method: 'GET',
+      url: '/laporan-pembelian/export/pdf',
+      responseType: 'blob'
+    })
+
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = 'laporan-pembelian.pdf'
+    link.click()
+    URL.revokeObjectURL(link.href)
+    
+    // Show success notification
+    await Swal.fire({
+      title: 'Berhasil!',
+      text: 'Laporan PDF laporan-pembelian berhasil diunduh',
+      icon: 'success',
+      confirmButtonColor: '#1d4ed8',
+      timer: 3000,
+      timerProgressBar: true
+    })
+  } catch (error) {
+    console.error('Error exporting PDF:', error)
+    // Skip showing error alert as requested
+  }
+}
+
+const exportToExcel = async () => {
+  try {
+    const response = await api.request({
+      method: 'GET',
+      url: '/laporan-pembelian/export/excel',
+      responseType: 'blob'
+    })
+
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = 'laporan-pembelian.xlsx'
+    link.click()
+    URL.revokeObjectURL(link.href)
+    
+    // Show success notification
+    await Swal.fire({
+      title: 'Berhasil!',
+      text: 'Laporan Excel laporan-pembelian berhasil diunduh',
+      icon: 'success',
+      confirmButtonColor: '#1d4ed8',
+      timer: 3000,
+      timerProgressBar: true
+    })
+  } catch (error) {
+    console.error('Error exporting Excel:', error)
+    // Skip showing error alert as requested
+  }
+}
 
 const fetchDataLaporan = async () => {
   try {
@@ -119,8 +187,40 @@ onMounted(fetchDataLaporan)
         >
           Terapkan
         </button>
+        <button
+              @click="openExportModal"
+              class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
+            >
+              Print / Export
+            </button>
       </div>
-
+      
+        <!-- Modal Export -->
+        <div
+          v-if="showExportModal"
+          class="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50"
+        >
+          <div class="bg-white p-6 rounded-lg shadow-lg w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
+            <h2 class="text-xl mb-4">Pilih Format Export</h2>
+            <div class="flex justify-between w-full">
+              <button
+                @click="exportToPDF"
+                class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
+              >
+                Export PDF
+              </button>
+              <button
+                @click="exportToExcel"
+                class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
+              >
+                Export Excel
+              </button>
+            </div>
+            <div class="mt-4">
+              <button @click="closeExportModal" class="text-red-500">Tutup</button>
+            </div>
+          </div>
+        </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div class="bg-blue-100 p-4 rounded-lg text-center">
           <h5 class="text-lg font-semibold text-blue-700">Periode</h5>

@@ -45,9 +45,9 @@ const menuGroups = ref([
         label: 'Voucher',
         route: '#',
         children: [
-          { label: 'Daftar Voucher', route: '/member/dashboard/barang' },
-          { label: 'Penukaran Voucher', route: '/member/dashboard/barang/create' },
-          { label: 'Riwayat Penukaran Voucher', route: '/member/dashboard/barang/create' },
+          { label: 'Daftar Voucher', route: '/member/dashboard/voucher' },
+          { label: 'Penukaran Voucher', route: '/member/dashboard/voucher/redeem' },
+
         ],
       },
 
@@ -58,7 +58,7 @@ const menuGroups = ref([
                   height="18"
                   viewBox="0 0 18 18"
                   fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+                xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
                     d="M1.43425 7.5093H2.278C2.44675 7.5093 2.55925 7.3968 2.58737 7.31243L2.98112 6.32805H5.90612L6.27175 7.31243C6.328 7.48118 6.46862 7.5093 6.58112 7.5093H7.453C7.76237 7.48118 7.87487 7.25618 7.76237 7.03118L5.428 1.4343C5.37175 1.26555 5.3155 1.23743 5.14675 1.23743H3.88112C3.76862 1.23743 3.59987 1.29368 3.57175 1.4343L1.153 7.08743C1.0405 7.2843 1.20925 7.5093 1.43425 7.5093ZM4.47175 2.98118L5.3155 5.17493H3.59987L4.47175 2.98118Z"
@@ -135,11 +135,13 @@ const menuGroups = ref([
     }"
     ref="target"
   >
-    <!-- SIDEBAR HEADER -->
-    <div class="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
-      <router-link to="/">
-        <img src="@/assets/images/logo/logo.svg" alt="Logo" />
-      </router-link>
+        <!-- SIDEBAR HEADER -->
+        <div class="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
+      <div class="flex items-center justify-center w-full">
+        <router-link to="/">
+          <img src="@/assets/images/logo/Logo.png" alt="Logo" class="w-30 h-30"/>
+        </router-link>
+      </div>
 
       <button class="block lg:hidden" @click="sidebarStore.isSidebarOpen = false">
         <svg

@@ -38,6 +38,8 @@ const handleLogin = async () => {
       router.push({ name: 'dashboard-admin' })
     } else if (userRole === 'super') {
       router.push({ name: 'dashboard-super' })
+    } else if (userRole === 'operator') {
+      router.push({ name: 'dashboard-operator' })
     } else if (userRole === 'user') {
       router.push({ name: 'dashboard-user' })
     } else if (userRole === 'member') {
@@ -57,7 +59,7 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <DefaultAuthCard title="Halaman Login MiniMarket">
+  <DefaultAuthCard title="Halaman Login ">
     <InputGroup label="Email" type="email" placeholder="Enter your email" v-model="email">
       <svg
         class="fill-current"

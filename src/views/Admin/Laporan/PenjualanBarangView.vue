@@ -2,7 +2,75 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '@/api'
 import DefaultLayoutAdmin from '@/layouts/DefaultLayoutAdmin.vue'
+const showExportModal = ref(false) // Flag untuk menampilkan modal export
+const openExportModal = () => {
+  showExportModal.value = true
+}
 
+const closeExportModal = () => {
+  showExportModal.value = false
+}
+const exportToPDF = async () => {
+  try {
+    const response = await api.request({
+      method: 'GET',
+      url: '/laporan-penjualan-barang/export/pdf',
+      responseType: 'blob'
+    })
+
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = 'laporan-penjualan-barang.pdf'
+    link.click()
+    URL.revokeObjectURL(link.href)
+    
+    // Show success notification
+    await Swal.fire({
+      title: 'Berhasil!',
+      text: 'Laporan PDF laporan-penjualan-barang berhasil diunduh',
+      icon: 'success',
+      confirmButtonColor: '#1d4ed8',
+      timer: 3000,
+      timerProgressBar: true
+    })
+  } catch (error) {
+    console.error('Error exporting PDF:', error)
+    // Skip showing error alert as requested
+  }
+}
+
+const exportToExcel = async () => {
+  try {
+    const response = await api.request({
+      method: 'GET',
+      url: '/laporan-penjualan-barang/export/excel',
+      responseType: 'blob'
+    })
+
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = 'laporan-penjualan-barang.xlsx'
+    link.click()
+    URL.revokeObjectURL(link.href)
+    
+    // Show success notification
+    await Swal.fire({
+      title: 'Berhasil!',
+      text: 'Laporan Excel laporan-penjualan-barang berhasil diunduh',
+      icon: 'success',
+      confirmButtonColor: '#1d4ed8',
+      timer: 3000,
+      timerProgressBar: true
+    })
+  } catch (error) {
+    console.error('Error exporting Excel:', error)
+    // Skip showing error alert as requested
+  }
+}
 const laporanPenjualanData = ref([])
 const rekapLaporan = ref({ total_terjual: 0, total_keuntungan: 0 })
 const currentPage = ref(1)
@@ -77,7 +145,12 @@ onMounted(fetchDataLaporan)
           <option value="tahunan">Tahunan</option>
           <option value="custom">Custom</option>
         </select>
-        
+        <button
+              @click="openExportModal"
+              class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
+            >
+              Print / Export
+            </button>
         <input v-if="showTanggalInput" v-model="tanggal" type="date" class="border p-2 rounded" />
         <input v-if="showBulanInput" v-model="bulan" type="month" class="border p-2 rounded" />
         <input v-if="showTahunInput" v-model="tahun" type="number" class="border p-2 rounded" placeholder="Tahun" />
@@ -98,7 +171,32 @@ onMounted(fetchDataLaporan)
           <p>{{ rekapLaporan.total_terjual }} pcs</p>
         </div>
       </div>
-
+                    <!-- Modal Export -->
+                    <div
+          v-if="showExportModal"
+          class="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50"
+        >
+          <div class="bg-white p-6 rounded-lg shadow-lg w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
+            <h2 class="text-xl mb-4">Pilih Format Export</h2>
+            <div class="flex justify-between w-full">
+              <button
+                @click="exportToPDF"
+                class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
+              >
+                Export PDF
+              </button>
+              <button
+                @click="exportToExcel"
+                class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
+              >
+                Export Excel
+              </button>
+            </div>
+            <div class="mt-4">
+              <button @click="closeExportModal" class="text-red-500">Tutup</button>
+            </div>
+          </div>
+        </div>
       <div class="max-w-full overflow-x-auto">
         <table class="w-full table-auto">
           <thead>

@@ -194,14 +194,14 @@ onMounted(() => {
     <div
       class="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1"
     >
-      <h4 class="mb-6 text-xl font-semibold text-black dark:text-white">Users Barang</h4>
+      <h4 class="mb-6 text-xl font-semibold text-black dark:text-white">Daftar Pengguna </h4>
       <!-- Action Buttons -->
 
       <div class="max-w-full overflow-x-auto">
         <div class="flex justify-between mb-4">
           <div class="flex gap-4 items-center">
             <button
-              @click="$router.push({ name: 'daftar-pengguna.create' })"
+              @click="$router.push({ name: 'daftar-pengguna.create-admin' })"
               class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark"
             >
               Create Data
@@ -309,7 +309,7 @@ onMounted(() => {
                   <button
                     @click="
                       $router.push({
-                        name: 'daftar-pengguna.update',
+                        name: 'daftar-pengguna.update-admin',
                         params: { id: users.id }
                       })
                     "

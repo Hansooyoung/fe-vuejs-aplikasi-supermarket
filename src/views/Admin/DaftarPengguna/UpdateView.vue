@@ -68,7 +68,7 @@ const handleSubmit = async () => {
     console.log(response.data);
 
     // Redirect to the index page
-    router.push({ name: 'daftar-pengguna' });
+    router.push({ name: 'daftar-pengguna-admin' });
   } catch (error) {
     if (error.response && error.response.data.errors) {
       errors.value = error.response.data.errors;

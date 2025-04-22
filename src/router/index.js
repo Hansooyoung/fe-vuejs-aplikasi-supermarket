@@ -24,6 +24,9 @@ import api from '@/api'
             case 'member':
               next({ name: 'dashboard-member' })
               break
+            case 'operator':
+              next({ name: 'dashboard-operator' })
+              break
             case 'super':
               next({ name: 'dashboard-super' })
               break
@@ -68,19 +71,19 @@ import api from '@/api'
     meta: { role: 'member' }
   },
   {
+    path: '/operator/dashboard',
+    name: 'dashboard-operator',
+    component: () => import(/* webpackChunkName: "home" */ '../views/Operator/ECommerceView.vue'),
+    meta: { role: 'operator' }
+  },
+  {
     path: '/admin/dashboard/kategori',
     name: 'kategori',
     component: () =>
       import(/* webpackChunkName: "home" */ '../views/Admin/Kategori/IndexView.vue'),
     meta: { role: 'admin' }
   },
-  {
-    path: '/super/dashboard/kategori',
-    name: 'kategori-super',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Kategori/IndexView.vue'),
-    meta: { role: 'super' }
-  },
+
   {
     path: '/admin/dashboard/kategori/create',
     name: 'kategori.create',
@@ -88,67 +91,63 @@ import api from '@/api'
       import(/* webpackChunkName: "home" */ '../views/Admin/Kategori/CreateView.vue'),
     meta: { role: 'admin' }
   },
-  {
-    path: '/super/dashboard/kategori/create',
-    name: 'kategori-super.create',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Kategori/CreateView.vue'),
-    meta: { role: 'super' }
-  },
+
   {
     path: '/admin/dashboard/kategori/update/:id',
     name: 'kategori.update',
     component: () => import('../views/Admin/Kategori/UpdateView.vue'),
     meta: { role: 'admin' }
   },
-  {
-    path: '/super/dashboard/kategori/update/:id',
-    name: 'kategori-super.update',
-    component: () => import('../views/Admin/Kategori/UpdateView.vue'),
-    meta: { role: 'super' }
-  },
-  {
-    path: '/admin/dashboard/daftar-pengguna',
-    name: 'daftar-pengguna',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Admin/DaftarPengguna/IndexView.vue'),
-    meta: { role: 'admin' }
-  },
+
   {
     path: '/super/dashboard/daftar-pengguna',
-    name: 'daftar-pengguna-super',
+    name: 'daftar-pengguna',
     component: () =>
       import(/* webpackChunkName: "home" */ '../views/Super/DaftarPengguna/IndexView.vue'),
     meta: { role: 'super' }
   },
-  {
-    path: '/admin/dashboard/daftar-pengguna/create',
-    name: 'daftar-pengguna.create',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Admin/DaftarPengguna/CreateView.vue'),
-    meta: { role: 'admin' }
-  },
+
   {
     path: '/super/dashboard/daftar-pengguna/create',
-    name: 'daftar-pengguna-super.create',
+    name: 'daftar-pengguna.create',
     component: () =>
       import(/* webpackChunkName: "home" */ '../views/Super/DaftarPengguna/CreateView.vue'),
     meta: { role: 'super' }
   },
-  {
-    path: '/admin/dashboard/daftar-pengguna/update/:id',
-    name: 'daftar-pengguna.update',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Admin/DaftarPengguna/UpdateView.vue'),
-    meta: { role: 'admin' }
-  },
+
   {
     path: '/super/dashboard/daftar-pengguna/update/:id',
-    name: 'daftar-pengguna-super.update',
+    name: 'daftar-pengguna.update',
     component: () =>
       import(/* webpackChunkName: "home" */ '../views/Super/DaftarPengguna/UpdateView.vue'),
     meta: { role: 'super' }
   },
+
+  //admin
+  {
+    path: '/admin/dashboard/daftar-pengguna',
+    name: 'daftar-pengguna-admin',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/DaftarPengguna/IndexView.vue'),
+    meta: { role: 'admin' }
+  },
+
+  {
+    path: '/admin/dashboard/daftar-pengguna/create',
+    name: 'daftar-pengguna.create-admin',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/DaftarPengguna/CreateView.vue'),
+    meta: { role: 'admin' }
+  },
+
+  {
+    path: '/admin/dashboard/daftar-pengguna/update/:id',
+    name: 'daftar-pengguna.update-admin',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/DaftarPengguna/UpdateView.vue'),
+    meta: { role: 'admin' }
+  },
+ 
 
   {
     path: '/admin/dashboard/satuan',
@@ -158,12 +157,13 @@ import api from '@/api'
     meta: { role: 'admin' }
   },
   {
-    path: '/super/dashboard/satuan',
-    name: 'satuan-super',
+    path: '/admin/dashboard/absensi',
+    name: 'absensi',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Kelas/IndexView.vue'),
-    meta: { role: 'super' }
+      import(/* webpackChunkName: "home" */ '../views/Admin/Absensi/IndexView.vue'),
+    meta: { role: 'admin' }
   },
+
   {
     path: '/admin/dashboard/satuan/create',
     name: 'satuan.create',
@@ -171,13 +171,7 @@ import api from '@/api'
       import(/* webpackChunkName: "home" */ '../views/Admin/Satuan/CreateView.vue'),
     meta: { role: 'admin' }
   },
-  {
-    path: '/super/dashboard/satuan/create',
-    name: 'satuan-super.create',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Kelas/CreateView.vue'),
-    meta: { role: 'super' }
-  },
+
   {
     path: '/admin/dashboard/satuan/update/:id',
     name: 'satuan.update',
@@ -185,12 +179,62 @@ import api from '@/api'
       import(/* webpackChunkName: "home" */ '../views/Admin/Satuan/UpdateView.vue'),
     meta: { role: 'admin' }
   },
+
   {
-    path: '/super/dashboard/satuan/update/:id',
-    name: 'satuan-super.update',
+    path: '/admin/dashboard/diskon',
+    name: 'diskon',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Kelas/UpdateView.vue'),
-    meta: { role: 'super' }
+      import(/* webpackChunkName: "home" */ '../views/Admin/Diskon/IndexView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
+    path: '/admin/dashboard/diskon/create',
+    name: 'diskon.create',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/Diskon/CreateView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
+    path: '/admin/dashboard/diskon/update/:id',
+    name: 'diskon.update',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/Diskon/UpdateView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
+    path: '/admin/dashboard/voucher',
+    name: 'voucher',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/Voucher/IndexView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
+    path: '/admin/dashboard/voucher/create',
+    name: 'voucher.create',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/Voucher/CreateView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
+    path: '/admin/dashboard/voucher/update/:id',
+    name: 'voucher.update',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Admin/Voucher/UpdateView.vue'),
+    meta: { role: 'admin' }
+  },
+  {
+    path: '/member/dashboard/voucher',
+    name: 'voucher',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Member/Voucher/IndexView.vue'),
+    meta: { role: 'member' }
+  },
+  {
+    path: '/member/dashboard/voucher/redeem',
+    name: 'voucher.redeem',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Member/Voucher/CreateView.vue'),
+    meta: { role: 'member' }
   },
   {
     path: '/admin/dashboard/vendor',
@@ -234,13 +278,7 @@ import api from '@/api'
       import(/* webpackChunkName: "home" */ '../views/Admin/Laporan/PenjualanBarangView.vue'),
     meta: { role: 'admin' }
   },
-  {
-    path: '/super/dashboard/vendor',
-    name: 'vendor-super',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Vendor/IndexView.vue'),
-    meta: { role: 'super' }
-  },
+
   {
     path: '/admin/dashboard/vendor/create',
     name: 'vendor.create',
@@ -248,13 +286,7 @@ import api from '@/api'
       import(/* webpackChunkName: "home" */ '../views/Admin/Vendor/CreateView.vue'),
     meta: { role: 'admin' }
   },
-  {
-    path: '/super/dashboard/vendor/create',
-    name: 'vendor-super.create',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Vendor/CreateView.vue'),
-    meta: { role: 'super' }
-  },
+
   {
     path: '/admin/dashboard/vendor/update/:id',
     name: 'vendor.update',
@@ -264,39 +296,74 @@ import api from '@/api'
   },
 
   {
-    path: '/super/dashboard/vendor/update/:id',
-    name: 'vendor-super.update',
+    path: '/operator/dashboard/pembelian',
+    name: 'pembelian',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Vendor/UpdateView.vue'),
+      import(/* webpackChunkName: "home" */ '../views/Operator/Pembelian/IndexView.vue'),
+    meta: { role: 'operator' }
+  },
+  {
+    path: '/operator/dashboard/pembelian/:id',
+    name: 'pembelian.detail',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Operator/Pembelian/DetailView.vue'),
+    meta: { role: 'operator' }
+  },
+  {
+    path: '/operator/dashboard/pembelian/create',
+    name: 'pembelian.create',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Operator/Pembelian/CreateView.vue'),
+    meta: { role: 'operator' }
+  },
+  {
+    path: '/super/dashboard/pembelian',
+    name: 'pembelian-super',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Super/Pembelian/IndexView.vue'),
     meta: { role: 'super' }
   },
   {
-    path: '/user/dashboard/pembelian',
-    name: 'pembelian',
+    path: '/super/dashboard/pembelian/edit/:id',
+    name: 'pembelian.update-super',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/User/Pembelian/IndexView.vue'),
-    meta: { role: 'user' }
+      import(/* webpackChunkName: "home" */ '../views/Super/Pembelian/UpdateView.vue'),
+    meta: { role: 'super' }
   },
   {
-    path: '/user/dashboard/pembelian/:id',
-    name: 'pembelian.detail',
+    path: '/super/dashboard/pembelian/:id',
+    name: 'pembelian.detail-super',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/User/Pembelian/DetailView.vue'),
-    meta: { role: 'user' }
-  },
-  {
-    path: '/user/dashboard/pembelian/create',
-    name: 'pembelian.create',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/User/Pembelian/CreateView.vue'),
-    meta: { role: 'user' }
+      import(/* webpackChunkName: "home" */ '../views/Super/Pembelian/DetailView.vue'),
+    meta: { role: 'super' }
   },
   {
     path: '/user/dashboard/penjualan',
-    name: 'penjualan',
+    name: 'penjualan',  
     component: () =>
       import(/* webpackChunkName: "home" */ '../views/User/Penjualan/IndexView.vue'),
     meta: { role: 'user' }
+  },
+  {
+    path: '/super/dashboard/penjualan',
+    name: 'penjualan-super',  
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Super/Penjualan/IndexView.vue'),
+    meta: { role: 'super' }
+  },
+  {
+    path: '/super/dashboard/penjualan/:id',
+    name: 'penjualan.detail-super',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Super/Penjualan/DetailView.vue'),
+    meta: { role: 'super' }
+  },
+  {
+    path: '/super/dashboard/penjualan/edit/:id',
+    name: 'penjualan.update-super',
+    component: () =>
+      import(/* webpackChunkName: "home" */ '../views/Super/Penjualan/UpdateView.vue'),
+    meta: { role: 'super' }
   },
   {
     path: '/user/dashboard/penjualan/struk/:id',
@@ -320,67 +387,46 @@ import api from '@/api'
     meta: { role: 'user' }
   },
   {
-    path: '/user/dashboard/barang',
+    path: '/operator/dashboard/barang',
     name: 'barang',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/User/Barang/IndexView.vue'),
-    meta: { role: 'user' }
+      import(/* webpackChunkName: "home" */ '../views/Operator/Barang/IndexView.vue'),
+    meta: { role: 'operator' }
   },
   {
-    path: '/super/dashboard/barang',
-    name: 'barang-super',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Vendor/IndexView.vue'),
-    meta: { role: 'super' }
-  },
-  {
-    path: '/user/dashboard/barang/create',
+    path: '/operator/dashboard/barang/create',
     name: 'barang.create',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/User/Barang/CreateView.vue'),
-    meta: { role: 'user' }
+      import(/* webpackChunkName: "home" */ '../views/Operator/Barang/CreateView.vue'),
+    meta: { role: 'operator' }
   },
   {
-    path: '/user/dashboard/pengajuan-barang',
+    path: '/operator/dashboard/pengajuan-barang',
     name: 'pengajuan-barang',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/User/Pengajuan/IndexView.vue'),
-    meta: { role: 'user' }
+      import(/* webpackChunkName: "home" */ '../views/Operator/Pengajuan/IndexView.vue'),
+    meta: { role: 'operator' }
   },
   {
-    path: '/user/dashboard/pengajuan-barang/create',
+    path: '/operator/dashboard/pengajuan-barang/create',
     name: 'pengajuan-barang.create',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/User/Pengajuan/CreateView.vue'),
-    meta: { role: 'user' }
+      import(/* webpackChunkName: "home" */ '../views/Operator/Pengajuan/CreateView.vue'),
+    meta: { role: 'operator' }
   },
   {
-    path: '/super/dashboard/barang/create',
-    name: 'barang-super.create',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Vendor/CreateView.vue'),
-    meta: { role: 'super' }
-  },
-  {
-    path: '/user/dashboard/barang/update/:kode_barang',
+    path: '/operator/dashboard/barang/update/:kode_barang',
     name: 'barang.update',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/User/Barang/UpdateView.vue'),
-    meta: { role: 'user' }
+      import(/* webpackChunkName: "home" */ '../views/Operator/Barang/UpdateView.vue'),
+    meta: { role: 'operator' }
   },
   {
-    path: '/user/dashboard/barang/detail/:kode_barang',
+    path: '/operator/dashboard/barang/detail/:kode_barang',
     name: 'barang.detail',
     component: () =>
-      import(/* webpackChunkName: "home" */ '../views/User/Barang/DetailView.vue'),
-    meta: { role: 'user' }
-  },
-  {
-    path: '/super/dashboard/barang/update/:kode_barang',
-    name: 'barang-super.update',
-    component: () =>
-      import(/* webpackChunkName: "home" */ '../views/Super/Vendor/UpdateView.vue'),
-    meta: { role: 'super' }
+      import(/* webpackChunkName: "home" */ '../views/Operator/Barang/DetailView.vue'),
+    meta: { role: 'operator' }
   },
   {
     path: '/user/dashboard/member',

@@ -19,14 +19,20 @@ const modalMessage = ref('') // Pesan yang ditampilkan di dalam modal
 const isDeleteButtonVisible = ref(true) // Untuk menentukan apakah tombol "Hapus" harus ditampilkan
 const showImportModal = ref(false) // Flag untuk menampilkan modal import
 const selectedFile = ref(null) // Menyimpan file yang dipilih untuk import
+
+// Tambahkan variabel untuk sorting
+const sortField = ref('tanggal_penjualan') // Field yang di-sort
+const sortDirection = ref('desc') // Arah sorting (asc/desc)
+
 const formatRupiah = (angka) => {
   return new Intl.NumberFormat('id-ID', { 
     style: 'currency', 
     currency: 'IDR', 
-    minimumFractionDigits: 0, // Menghilangkan desimal
-    maximumFractionDigits: 0  // Menghilangkan desimal
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(angka);
 };
+
 watch(searchQuery, () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
@@ -35,12 +41,12 @@ watch(searchQuery, () => {
   }, 5000)
 })
 
-// Fetch data dari API
+// Fetch data dari API dengan sorting
 const fetchDataPenjualan = async () => {
   try {
     const response = await api.request({
       method: 'GET',
-      url: `/penjualan?page=${currentPage.value}&search=${searchQuery.value}`,
+      url: `/penjualan?page=${currentPage.value}&search=${searchQuery.value}&sort=${sortField.value}&direction=${sortDirection.value}`,
       headers: {
         Accept: 'application/json',
         'Content-type': 'application/json'
@@ -48,10 +54,29 @@ const fetchDataPenjualan = async () => {
     })
 
     penjualanData.value = response.data.data
-    totalPages.value = response.data.pagination.last_page // Total halaman dari API
+    totalPages.value = response.data.pagination.last_page
   } catch (error) {
     console.error('Error fetching Penjualan barang:', error)
   }
+}
+
+// Fungsi untuk toggle sorting
+const toggleSort = (field) => {
+  if (sortField.value === field) {
+    // Jika field yang sama diklik, toggle arah sorting
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    // Jika field berbeda, set field baru dan default arah ascending
+    sortField.value = field
+    sortDirection.value = 'asc'
+  }
+  fetchDataPenjualan()
+}
+
+// Fungsi untuk mendapatkan class icon sorting
+const getSortIcon = (field) => {
+  if (sortField.value !== field) return ''
+  return sortDirection.value === 'asc' ? '↑' : '↓'
 }
 
 const nextPage = () => {
@@ -67,7 +92,6 @@ const prevPage = () => {
     fetchDataPenjualan()
   }
 }
-
 
 const handleFileInput = (event) => {
   selectedFile.value = event.target.files[0]
@@ -99,6 +123,7 @@ const importExcel = async () => {
     alert('Terjadi kesalahan saat impor data.')
   }
 }
+
 const exportToPDF = async () => {
   try {
     const response = await api.request({
@@ -148,7 +173,7 @@ const openExportModal = () => {
 const closeExportModal = () => {
   showExportModal.value = false
 }
-// Jalankan fetch data saat komponen terpasang
+
 onMounted(() => {
   fetchDataPenjualan()
 })
@@ -160,8 +185,7 @@ onMounted(() => {
       class="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1"
     >
       <h4 class="mb-6 text-xl font-semibold text-black dark:text-white">Transaksi Penjualan</h4>
-      <!-- Action Buttons -->
-
+      
       <div class="max-w-full overflow-x-auto">
         <div class="flex justify-between mb-4">
           <div class="flex gap-4 items-center">
@@ -223,11 +247,18 @@ onMounted(() => {
             </div>
           </div>
         </div>
+        
         <table class="w-full table-auto">
           <thead>
             <tr class="bg-gray-2 text-left dark:bg-meta-4">
               <th class="min-w-[220px] py-4 px-4 font-medium text-black dark:text-white xl:pl-11">
                 ID
+              </th>
+              <th 
+                class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white cursor-pointer"
+                @click="toggleSort('tanggal_penjualan')"
+              >
+                Tanggal Penjualan {{ getSortIcon('tanggal_penjualan') }}
               </th>
               <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
                 Nama Member
@@ -241,13 +272,12 @@ onMounted(() => {
               <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
                 Total Keuntungan
               </th>
-
               <th class="py-4 px-4 font-medium text-black dark:text-white">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="penjualanData.length === 0">
-              <td colspan="6" class="text-center py-5 px-4 text-gray-500">
+              <td colspan="7" class="text-center py-5 px-4 text-gray-500">
                 Data penjualan tidak ada
               </td>
             </tr>
@@ -256,6 +286,9 @@ onMounted(() => {
                 <h5 class="font-medium text-black dark:text-white">
                   {{ penjualan.id }}
                 </h5>
+              </td>
+              <td class="py-5 px-4">
+                <p class="text-black dark:text-white">{{ penjualan.tanggal_penjualan }}</p>
               </td>
               <td class="py-5 px-4">
                 <p class="text-black dark:text-white">{{ penjualan.nama_member }}</p>
@@ -386,5 +419,9 @@ onMounted(() => {
 
 .bg-gray-300:hover {
   background-color: #9ca3af;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 </style>

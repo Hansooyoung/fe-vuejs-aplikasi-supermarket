@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { useSidebarStore } from '@/stores/sidebar'
 import DarkModeSwitcher from './DarkModeSwitcher.vue'
 import DropdownMessage from './DropdownMessage.vue'
@@ -58,7 +58,7 @@ const sidebarStore = useSidebarStore()
         </router-link>
       </div>
       <div class="hidden sm:block">
-        <form action="https://formbold.com/s/unique_form_id" method="POST">
+        <!-- <form action="https://formbold.com/s/unique_form_id" method="POST">
           <div class="relative">
             <button class="absolute top-1/2 left-0 -translate-y-1/2">
               <svg
@@ -90,7 +90,7 @@ const sidebarStore = useSidebarStore()
               class="w-full xl:w-125 bg-transparent pr-4 pl-9 focus:outline-none"
             />
           </div>
-        </form>
+        </form> -->
       </div>
 
       <div class="flex items-center gap-3 2xsm:gap-7">

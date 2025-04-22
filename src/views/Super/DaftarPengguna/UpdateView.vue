@@ -34,7 +34,7 @@ const fetchUser = async () => {
         'Accept': 'application/json',
       },
     });
-    const user = response.data;
+    const user = response.data.data;
     formData.value = {
       nama: user.nama,
       email: user.email,
@@ -68,7 +68,7 @@ const handleSubmit = async () => {
     console.log(response.data);
 
     // Redirect to the index page
-    router.push({ name: 'daftar-pengguna-super' });
+    router.push({ name: 'daftar-pengguna' });
   } catch (error) {
     if (error.response && error.response.data.errors) {
       errors.value = error.response.data.errors;

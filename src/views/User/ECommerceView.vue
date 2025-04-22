@@ -1,300 +1,174 @@
-<script setup lang="js">
-import { ref } from 'vue';
+<script setup>
+import { ref, onMounted } from 'vue';
 import api from '@/api';
 import DefaultLayoutUser from '@/layouts/DefaultLayoutUser.vue';
-import ChartOne from '@/components/Charts/ChartOne.vue';
-import ChartTwo from '@/components/Charts/ChartTwo.vue';
-import ChartThree from '@/components/Charts/ChartThree.vue';
-import MapOne from '@/components/Maps/MapOne.vue';
-import TableOne from '@/components/Tables/TableOne.vue';
-import ChatCard from '@/components/ChatCard.vue';
-import VueApexCharts from 'vue3-apexcharts'
-// State untuk menyimpan data
-const totalPeminjaman = ref(0);
-const totalPengembalian = ref(0);
-const totalSiswa = ref(0);
-const totalBarang = ref(0);
-const totalTersedia = ref(0);
-const showTersedia = ref(false);
 
-const fetchDataDashboard = async () => {
+const dashboardData = ref({
+  total_transaksi: 0,
+  total_penjualan_setelah_diskon: 0,
+  total_keuntungan: 0,
+  tanggal: ''
+});
+
+const loading = ref(true);
+const error = ref(null);
+
+const fetchDashboardData = async () => {
   try {
-    // Fetch data untuk total peminjaman, pengembalian, dan siswa
-    const peminjamanResponse = await api.request({ method: 'GET', url: '/peminjaman' });
-    totalPeminjaman.value = peminjamanResponse.data.total_data.total_peminjaman;
-    totalPengembalian.value = peminjamanResponse.data.total_data.total_pengembalian;
-
-    const siswaResponse = await api.request({ method: 'GET', url: '/siswa' });
-    totalSiswa.value = siswaResponse.data.total_siswa;
-
-    // Fetch data total barang dan barang tersedia
-    const barangResponse = await api.request({ method: 'GET'  , url: '/barang-inventaris' });
-    totalBarang.value = barangResponse.data.total.total_semua_barang;
-    totalTersedia.value = barangResponse.data.total.total_tersedia;
-  } catch (error) {
-    console.error('Error fetching dashboard data:', error);
+    loading.value = true;
+    const response = await api.get('/dashboard/kasir');
+    
+    dashboardData.value = {
+      ...response.data.data,
+      tanggal: response.data.tanggal
+    };
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Gagal memuat data dashboard';
+    console.error('Error fetching dashboard data:', err);
+  } finally {
+    loading.value = false;
   }
 };
 
-fetchDataDashboard();
+onMounted(() => {
+  fetchDashboardData();
+  // Refresh data every 5 minutes
+  const interval = setInterval(fetchDashboardData, 300000);
+  return () => clearInterval(interval);
+});
 
-const toggleShowTersedia = () => {
-  showTersedia.value = !showTersedia.value;
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value);
 };
 
-
-
-const chartData = {
-  series: [
-    {
-      name: 'Product One',
-      data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30, 45]
-    },
-
-    {
-      name: 'Product Two',
-      data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39, 51]
-    }
-  ],
-  labels: ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
-}
-
-const chart = ref(null)
-
-const apexOptions = {
-  legend: {
-    show: false,
-    position: 'top',
-    horizontalAlign: 'left'
-  },
-  colors: ['#3C50E0', '#80CAEE'],
-  chart: {
-    fontFamily: 'Satoshi, sans-serif',
-    height: 335,
-    type: 'area',
-    dropShadow: {
-      enabled: true,
-      color: '#623CEA14',
-      top: 10,
-      blur: 4,
-      left: 0,
-      opacity: 0.1
-    },
-
-    toolbar: {
-      show: false
-    }
-  },
-  responsive: [
-    {
-      breakpoint: 1024,
-      options: {
-        chart: {
-          height: 300
-        }
-      }
-    },
-    {
-      breakpoint: 1366,
-      options: {
-        chart: {
-          height: 350
-        }
-      }
-    }
-  ],
-  stroke: {
-    width: [2, 2],
-    curve: 'straight'
-  },
-
-  labels: {
-    show: false,
-    position: 'top'
-  },
-  grid: {
-    xaxis: {
-      lines: {
-        show: true
-      }
-    },
-    yaxis: {
-      lines: {
-        show: true
-      }
-    }
-  },
-  dataLabels: {
-    enabled: false
-  },
-  markers: {
-    size: 4,
-    colors: '#fff',
-    strokeColors: ['#3056D3', '#80CAEE'],
-    strokeWidth: 3,
-    strokeOpacity: 0.9,
-    strokeDashArray: 0,
-    fillOpacity: 1,
-    discrete: [],
-    hover: {
-      size: undefined,
-      sizeOffset: 5
-    }
-  },
-  xaxis: {
-    type: 'category',
-    categories: chartData.labels,
-    axisBorder: {
-      show: false
-    },
-    axisTicks: {
-      show: false
-    }
-  },
-  yaxis: {
-    title: {
-      style: {
-        fontSize: '0px'
-      }
-    },
-    min: 0,
-    max: 100
-  }
-}
+const formatDate = (dateString) => {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  return new Date(dateString).toLocaleDateString('id-ID', options);
+};
 </script>
 
 <template>
   <DefaultLayoutUser>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <!-- Card Total Peminjaman -->
-      <div class="rounded-sm border border-stroke bg-white py-6 px-7.5 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 dark:bg-meta-4">
-          📦
-        </div>
-        <div class="mt-4 flex items-end justify-between">
-          <div>
-            <h4 class="text-title-md font-bold text-black dark:text-white">{{ totalPeminjaman }}</h4>
-            <span class="text-sm font-medium">Total Peminjaman</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card Total Pengembalian -->
-      <div class="rounded-sm border border-stroke bg-white py-6 px-7.5 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 dark:bg-meta-4">
-          🔄
-        </div>
-        <div class="mt-4 flex items-end justify-between">
-          <div>
-            <h4 class="text-title-md font-bold text-black dark:text-white">{{ totalPengembalian }}</h4>
-            <span class="text-sm font-medium">Total Pengembalian</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card Total Siswa -->
-      <div class="rounded-sm border border-stroke bg-white py-6 px-7.5 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 dark:bg-meta-4">
-          🎓
-        </div>
-        <div class="mt-4 flex items-end justify-between">
-          <div>
-            <h4 class="text-title-md font-bold text-black dark:text-white">{{ totalSiswa }}</h4>
-            <span class="text-sm font-medium">Total Siswa</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card Total Barang -->
-      <div class="rounded-sm border border-stroke bg-white py-6 px-7.5 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div class="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 dark:bg-meta-4">
-          🏷️
-        </div>
-        <div class="mt-4 flex items-end justify-between">
-          <div>
-            <h4 class="text-title-md font-bold text-black dark:text-white">
-              {{ showTersedia ? totalTersedia : totalBarang }}
-            </h4>
-            <span class="text-sm font-medium">{{ showTersedia ? 'Total Tersedia' : 'Total Barang' }}</span>
-          </div>
+    <div class="p-4 md:p-6 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Dashboard Kasir</h1>
+          <p class="text-gray-500" v-if="!loading && !error">
+            {{ formatDate(dashboardData.tanggal) }}
+          </p>
         </div>
         <button 
-          class="mt-4 w-full rounded-lg bg-blue-500 py-2 text-white hover:bg-blue-700"
-          @click="toggleShowTersedia"
+          @click="fetchDashboardData" 
+          class="btn btn-sm btn-outline"
+          :class="{ 'loading': loading }"
+          :disabled="loading"
         >
-          {{ showTersedia ? 'Show Total Barang' : 'Show Total Tersedia' }}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh
         </button>
       </div>
-    </div>
+      
+      <!-- Loading State -->
+      <div v-if="loading" class="flex flex-col items-center justify-center h-64 rounded-lg bg-white shadow-sm">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <p class="mt-4 text-gray-500">Memuat data dashboard...</p>
+      </div>
 
-    <div class="mt-4 grid grid-cols-12 gap-4 md:mt-6">
-      <div
-    class="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:col-span-8"
-  >
-    <div class="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
-      <div class="flex w-full flex-wrap gap-3 sm:gap-5">
-        <div class="flex min-w-47.5">
-          <span
-            class="mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-primary"
-          >
-            <span class="block h-2.5 w-full max-w-2.5 rounded-full bg-primary"></span>
-          </span>
-          <div class="w-full">
-            <p class="font-semibold text-primary">Total Peminjaman</p>
-            <p class="text-sm font-medium">12.04.2022 - 12.05.2022</p>
+      <!-- Error State -->
+      <div v-else-if="error" class="alert alert-error shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <h3 class="font-bold">Gagal memuat data!</h3>
+          <div class="text-xs">{{ error }}</div>
+        </div>
+        <button @click="fetchDashboardData" class="btn btn-sm btn-ghost">Coba Lagi</button>
+      </div>
+
+      <!-- Success State -->
+      <div v-else class="space-y-4">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 gap-4">
+          <!-- Total Transaksi -->
+          <div class="card bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div class="card-body p-4 md:p-6">
+              <div class="flex items-center">
+                <div class="rounded-full p-3 bg-blue-50 text-blue-600 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-sm font-medium text-gray-500">TOTAL TRANSAKSI</h2>
+                  <p class="text-2xl md:text-3xl font-bold text-gray-800">
+                    {{ dashboardData.total_transaksi }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Penjualan -->
+          <div class="card bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div class="card-body p-4 md:p-6">
+              <div class="flex items-center">
+                <div class="rounded-full p-3 bg-green-50 text-green-600 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-sm font-medium text-gray-500">TOTAL PENJUALAN</h2>
+                  <p class="text-2xl md:text-3xl font-bold text-gray-800">
+                    {{ formatCurrency(dashboardData.total_penjualan_setelah_diskon) }}
+                  </p>
+                 
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Keuntungan -->
+          <div class="card bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div class="card-body p-4 md:p-6">
+              <div class="flex items-center">
+                <div class="rounded-full p-3 bg-purple-50 text-purple-600 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-sm font-medium text-gray-500">TOTAL KEUNTUNGAN</h2>
+                  <p class="text-2xl md:text-3xl font-bold text-gray-800">
+                    {{ formatCurrency(dashboardData.total_keuntungan) }}
+                  </p>
+                  <p class="text-xs text-gray-500 mt-1">Bersih hari ini</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="flex min-w-47.5">
-          <span
-            class="mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-secondary"
-          >
-            <span class="block h-2.5 w-full max-w-2.5 rounded-full bg-secondary"></span>
-          </span>
-          <div class="w-full">
-            <p class="font-semibold text-secondary">Total Pengembalian</p>
-            <p class="text-sm font-medium">12.04.2022 - 12.05.2022</p>
-          </div>
+
+        <!-- Additional Info -->
+        <div class="bg-white rounded-lg shadow-sm p-4 text-center">
+          <p class="text-sm text-gray-500">
+            Data diperbarui secara otomatis setiap 5 menit
+          </p>
         </div>
       </div>
-      <div class="flex w-full max-w-45 justify-end">
-        <div class="inline-flex items-center rounded-md bg-whiter p-1.5 dark:bg-meta-4">
-          <button
-            class="rounded bg-white py-1 px-3 text-xs font-medium text-black shadow-card hover:bg-white hover:shadow-card dark:bg-boxdark dark:text-white dark:hover:bg-boxdark"
-          >
-            Day
-          </button>
-          <button
-            class="rounded py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark"
-          >
-            Week
-          </button>
-          <button
-            class="rounded py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark"
-          >
-            Month
-          </button>
-        </div>
-      </div>
-    </div>
-    <div>
-      <div id="chartOne" class="-ml-5">
-        <VueApexCharts
-          type="area"
-          height="350"
-          :options="apexOptions"
-          :series="chartData.series"
-          ref="chart"
-        />
-      </div>
-    </div>
-  </div>
-      <ChartTwo />
-      <ChartThree />
-      <MapOne />
-      <div class="col-span-12 xl:col-span-8">
-        <TableOne />
-      </div>
-      <ChatCard />
     </div>
   </DefaultLayoutUser>
 </template>
+
+<style scoped>
+.card {
+  @apply rounded-lg border border-gray-100 overflow-hidden;
+}
+</style>

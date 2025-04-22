@@ -9,7 +9,7 @@ import DefaultLayoutAdmin from '@/layouts/DefaultLayoutAdmin.vue';
 
 const router = useRouter();
 const formData = ref({
-  nama_kategori: '',
+  nama_satuan: '',
 });
 
 const errors = ref([]);
@@ -20,7 +20,7 @@ const handleSubmit = async () => {
 
     const response = await api.request({
       method: 'POST',
-      url: '/kategori',
+      url: '/satuan',
       headers: {
         'Accept': 'application/json',
         'Content-type': 'application/json',
@@ -31,7 +31,7 @@ const handleSubmit = async () => {
     // SweetAlert success notification
     await Swal.fire({
       title: 'Berhasil!',
-      text: 'Data kategori berhasil dibuat.',
+      text: 'Data satuan berhasil dibuat.',
       icon: 'success',
       confirmButtonText: 'OK',
       confirmButtonColor: '#1d4ed8',
@@ -39,8 +39,8 @@ const handleSubmit = async () => {
 
     console.log(response.data);
 
-    // Redirect ke halaman kategori setelah OK ditekan
-    router.push({ name: 'kategori' });
+    // Redirect ke halaman satuan setelah OK ditekan
+    router.push({ name: 'satuan' });
   } catch (error) {
     if (error.response && error.response.data.errors) {
       errors.value = error.response.data.errors;
@@ -75,15 +75,15 @@ const handleSubmit = async () => {
   <div class="grid">
     <div class="flex flex-col gap-9">
 
-      <DefaultCard cardTitle="Tambah Jenis Barang">
+      <DefaultCard cardTitle="Tambah Satuan">
         <form @submit.prevent="handleSubmit">
           <div class="p-6.5">
          
             <InputGroup
-              label="Nama Kategori Barang"
+              label="Nama Satuan Barang"
               type="text"
-              placeholder="Masukkan Nama Kategori barang"
-              v-model="formData.nama_kategori"
+              placeholder="Masukkan Nama Satuan barang"
+              v-model="formData.nama_satuan"
               customClasses="mb-4.5"
             />
 
